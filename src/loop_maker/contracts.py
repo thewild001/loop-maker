@@ -26,7 +26,7 @@ class EvaluationResult:
     """Evidence-backed evaluation of mandatory acceptance criteria."""
     verified_criteria: list[str] = field(default_factory=list)
     failed_criteria: list[str] = field(default_factory=list)
-    evidence: list[str] = field(default_factory=list)
+    evidence: dict[str, str] = field(default_factory=dict)
     feedback: str | None = None
 
 @dataclass(slots=True)
