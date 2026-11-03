@@ -12,11 +12,13 @@ except ImportError as exc:
 from .contracts import LoopConfig, Task
 from .demo_agent import DemoAgent
 from .engine import LoopEngine
+from .evolution import EvolutionStore
 from .registry import discover_adapters, discover_evaluator
 from .storage import SessionStore
 
 mcp = MCPServer("loop-maker-orchestrator")
 store = SessionStore(os.getenv("LOOP_MAKER_DB", "loop-maker.sqlite3"))
+evolution_store = EvolutionStore(os.getenv("LOOP_MAKER_EVOLUTION_DB", "loop-maker-evolution.sqlite3"))
 engine = LoopEngine(store, evaluator=discover_evaluator())
 agents = {"demo": DemoAgent(), **discover_adapters()}
 VALID_MODES = {"BASIC", "DETAIL", "FORCED_DETAIL", "MINIMAL"}
@@ -107,6 +109,62 @@ def loop_session_finish(session_id: str, status: str, converged: bool,
 def loop_get_session(session_id: str) -> dict:
     """Retrieve a persisted session, including its iterations and errors."""
     return store.get_session(session_id) or {"error": "session_not_found"}
+
+@mcp.tool()
+def loop_observation_add(
+    description: str,
+    domain: str,
+    category: str,
+    source: str = "host-agent",
+    session_id: str | None = None,
+    evidence: list[str] | None = None,
+    context: dict | None = None,
+    confidence: float = 0.5,
+    sensitivity: str = "internal",
+) -> dict:
+    """Persist a sanitized learning observation; do not submit raw conversations or secrets."""
+    try:
+        return evolution_store.add_observation(
+            description=description, domain=domain, category=category, source=source,
+            session_id=session_id, evidence=evidence, context=context,
+            confidence=confidence, sensitivity=sensitivity,
+        )
+    except ValueError as exc:
+        return {"error": str(exc)}
+
+
+@mcp.tool()
+def loop_observation_get(observation_id: str) -> dict:
+    """Retrieve one Evolution observation by ID."""
+    return evolution_store.get_observation(observation_id) or {"error": "observation_not_found"}
+
+
+@mcp.tool()
+def loop_observation_list(
+    domain: str | None = None,
+    category: str | None = None,
+    session_id: str | None = None,
+    limit: int = 50,
+) -> list[dict] | dict:
+    """List recent Evolution observations with optional exact-match filters."""
+    try:
+        return evolution_store.list_observations(
+            domain=domain, category=category, session_id=session_id, limit=limit
+        )
+    except ValueError as exc:
+        return {"error": str(exc)}
+
+
+@mcp.tool()
+def loop_observation_groups(min_occurrences: int = 2, limit: int = 50) -> list[dict] | dict:
+    """Find deterministic candidate groups; results require human interpretation."""
+    try:
+        return evolution_store.observation_groups(
+            min_occurrences=min_occurrences, limit=limit
+        )
+    except ValueError as exc:
+        return {"error": str(exc)}
+
 
 @mcp.resource("loop-maker://agents")
 def agents_catalog() -> str:
