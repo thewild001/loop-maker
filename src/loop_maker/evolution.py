@@ -181,6 +181,129 @@ class EvolutionStore:
         result.sort(key=lambda group: (-group["occurrences"], group["domain"], group["category"]))
         return result[:limit]
 
+
+    def review_patterns(
+        self,
+        *,
+        min_sessions: int = 2,
+        limit: int = 50,
+    ) -> dict[str, Any]:
+        """Rank evidence-backed candidates; recurrence requires distinct session IDs."""
+        if min_sessions < 2:
+            raise ValueError("min_sessions must be at least 2")
+        if not 1 <= limit <= 200:
+            raise ValueError("limit must be between 1 and 200")
+
+        observations = self.list_observations(limit=500)
+        grouped: dict[tuple[str, str, str], list[dict[str, Any]]] = defaultdict(list)
+        skill_signals: dict[tuple[str, str], dict[str, list[str]]] = defaultdict(
+            lambda: defaultdict(list)
+        )
+        for item in observations:
+            skill = str(item["context"].get("skill", "")).strip()
+            if not skill:
+                continue
+            grouped[(item["domain"], item["category"], skill)].append(item)
+            skill_signals[(item["domain"], skill)][item["category"]].append(item["id"])
+
+        category_impact = {
+            "user-correction": 0.9,
+            "repeated-error": 1.0,
+            "tool-failure": 0.8,
+            "instruction-gap": 0.9,
+            "successful-strategy": 0.6,
+            "decision": 0.4,
+            "other": 0.3,
+        }
+        candidates: list[dict[str, Any]] = []
+        for (domain, category, skill), items in grouped.items():
+            sessions = sorted({item["session_id"] for item in items if item["session_id"]})
+            if len(sessions) < min_sessions:
+                continue
+            projects = sorted({
+                str(item["context"]["project"])
+                for item in items
+                if item["context"].get("project")
+            })
+            evidence_count = sum(len(item["evidence"]) for item in items)
+            confidence_mean = sum(item["confidence"] for item in items) / len(items)
+            recurrence_score = min(len(sessions) / 5, 1.0)
+            project_score = min(len(projects) / 3, 1.0)
+            evidence_score = min(evidence_count / max(len(items) * 2, 1), 1.0)
+            impact_score = round(
+                0.35 * recurrence_score
+                + 0.20 * project_score
+                + 0.20 * category_impact[category]
+                + 0.15 * confidence_mean
+                + 0.10 * evidence_score,
+                3,
+            )
+            priority = "high" if impact_score >= 0.75 else (
+                "medium" if impact_score >= 0.5 else "low"
+            )
+            candidates.append({
+                "domain": domain,
+                "skill": skill,
+                "category": category,
+                "occurrences": len(items),
+                "independent_sessions": len(sessions),
+                "session_ids": sessions,
+                "projects": projects,
+                "project_count": len(projects),
+                "evidence_count": evidence_count,
+                "observation_ids": [item["id"] for item in items],
+                "confidence_mean": round(confidence_mean, 3),
+                "impact_score": impact_score,
+                "priority": priority,
+                "interpretation": "evidence-backed-candidate; human review required",
+            })
+
+        candidates.sort(
+            key=lambda item: (
+                -item["impact_score"], -item["independent_sessions"],
+                item["domain"], item["skill"], item["category"],
+            )
+        )
+        mixed_signals = []
+        for (domain, skill), categories in skill_signals.items():
+            friction = {
+                category: ids for category, ids in categories.items()
+                if category in {"user-correction", "repeated-error", "tool-failure", "instruction-gap"}
+            }
+            positive = categories.get("successful-strategy", [])
+            if friction and positive:
+                mixed_signals.append({
+                    "domain": domain,
+                    "skill": skill,
+                    "friction_observation_ids": [
+                        observation_id for ids in friction.values() for observation_id in ids
+                    ],
+                    "positive_observation_ids": positive,
+                    "interpretation": (
+                        "mixed-signals; inspect context before generalizing. "
+                        "These observations are not necessarily contradictory."
+                    ),
+                })
+        mixed_signals.sort(key=lambda item: (item["domain"], item["skill"]))
+
+        return {
+            "candidate_count": len(candidates),
+            "candidates": candidates[:limit],
+            "mixed_signals": mixed_signals[:limit],
+            "review_policy": {
+                "minimum_independent_sessions": min_sessions,
+                "independence_key": "distinct non-empty session_id values",
+                "impact_score": "heuristic prioritization, not a probability or causal measure",
+                "human_review_required": True,
+            },
+            "limitations": [
+                "Observations without session_id do not contribute to independent recurrence.",
+                "Project diversity is counted only when context.project is supplied.",
+                "Mixed signals indicate coexisting positive and friction observations, not proven contradictions.",
+                "The score prioritizes review and does not establish that a skill change is beneficial.",
+            ],
+        }
+
     def close(self) -> None:
         if self._memory is not None:
             self._memory.close()
