@@ -24,6 +24,8 @@ def test_proposal_lifecycle_stages_and_requires_explicit_approval(tmp_path):
     )
     assert proposal["status"] == "proposed"
     assert active.read_text(encoding="utf-8") == original
+    with pytest.raises(ValueError, match="human approval"):
+        store.approve_proposal(proposal["id"], approved=True)
 
     diff = store.diff_proposal(proposal["id"])
     assert "-Original." in diff["diff"]
@@ -33,8 +35,6 @@ def test_proposal_lifecycle_stages_and_requires_explicit_approval(tmp_path):
 
     validation = store.validate_proposal(proposal["id"])
     assert validation["valid"] is True
-    with pytest.raises(ValueError, match="human approval"):
-        store.approve_proposal(proposal["id"], approved=True)
 
     approved = store.approve_proposal(proposal["id"], approved=True)
     assert approved["status"] == "approved"
