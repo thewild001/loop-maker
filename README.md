@@ -6,7 +6,7 @@
 
 ## Propósito
 
-Loop Maker no es un framework exclusivamente de programación ni un agente que sustituye a otros. Es una capa de orquestación que puede utilizarse desde el agente que el usuario ya emplea, de forma similar a la experiencia de MentorKit, pero con otro propósito: convertir tareas abiertas en ciclos acotados de ejecución, evaluación, corrección y convergencia.
+Loop Maker no es un framework exclusivamente de programación ni un agente que sustituye a otros. Es una capa de orquestación que se utiliza desde el agente que el usuario ya emplea, de forma similar a la experiencia de MentorKit, pero con otro propósito: convertir tareas abiertas en ciclos acotados de ejecución, evaluación, corrección y convergencia.
 
 Se aplica a investigación, análisis, redacción, planificación, desarrollo de software, datos, operaciones, aprendizaje y producción creativa. El método es común; los criterios de evaluación cambian según el dominio.
 
@@ -20,13 +20,26 @@ Instala las skills en el proyecto y abre ese proyecto con tu agente habitual.
 bash <(curl -fsSL https://raw.githubusercontent.com/thewild001/loop-maker/main/bootstrap.sh)
 ```
 
+Para instalar en otra carpeta:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/thewild001/loop-maker/main/bootstrap.sh) --target /ruta/al/proyecto
+```
+
 ### Windows PowerShell
 
 ```powershell
-& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/thewild001/loop-maker/main/bootstrap.ps1")))
+irm https://raw.githubusercontent.com/thewild001/loop-maker/main/bootstrap.ps1 | iex
 ```
 
-Para instalar en otra carpeta usa `--target` en Bash o `-Target` en PowerShell. Los archivos existentes se preservan por defecto; `--force` permite reemplazar archivos administrados por Loop Maker.
+Para instalar en una ruta específica, descarga el script y ejecútalo con parámetros:
+
+```powershell
+Invoke-WebRequest https://raw.githubusercontent.com/thewild001/loop-maker/main/bootstrap.ps1 -OutFile .\loop-maker-bootstrap.ps1
+.\loop-maker-bootstrap.ps1 -Target "C:\ruta\al\proyecto"
+```
+
+Los archivos existentes se preservan por defecto; `--force` / `-Force` permite reemplazar archivos administrados por Loop Maker.
 
 Después invoca la skill desde un host compatible:
 
@@ -103,7 +116,7 @@ Consulta [integrations/mcp/README.md](integrations/mcp/README.md) para configura
 | `loop-maker` | Entrada principal multipropósito |
 | `loop-maker-orchestrator` | Protocolo de orquestación |
 | `loop-maker-diagnostics` | Diagnóstico y recuperación |
-| `loop-maker-autoimprove` | Mejora iterativa controlada |
+| `loop-maker-autoimprove` | Mejora iterativa de resultados y procesos |
 | `loop-maker-stress-test` | Pruebas de límites y escenarios adversos |
 
 ## Estado de implementación
@@ -111,7 +124,7 @@ Consulta [integrations/mcp/README.md](integrations/mcp/README.md) para configura
 | Capacidad | Estado |
 |---|---|
 | Core iterativo, contratos y journal SQLite | Implementación inicial |
-| Skills e instalador multi-host | Implementación inicial |
+| Skills e instalador Bash/PowerShell | Implementación inicial |
 | MCP tools/resources/prompts | Implementación inicial |
 | Plugins de agentes vía entry points | Implementado |
 | Adapters nativos delegables para hosts | Pendiente |
@@ -123,6 +136,7 @@ Las integraciones actuales son una base para el uso in-agent, no una certificaci
 
 ## Documentación
 
+- [Instalación y uso](docs/installation.md)
 - [Arquitectura](docs/architecture.md)
 - [Desarrollo de adapters](docs/adapter-development.md)
 - [Integraciones](integrations/README.md)
