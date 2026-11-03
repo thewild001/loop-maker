@@ -10,7 +10,6 @@ from loop_maker.capabilities.models import (
     CapabilityInventory,
     CapabilityOperation,
     CapabilitySource,
-    DiscoveryError,
     InterfaceKind,
     ProviderDiscoveryResult,
     ProviderStatus,
@@ -89,7 +88,7 @@ def test_partial_provider_result_requires_error_details():
 
 
 def test_provider_result_rejects_foreign_source():
-    with pytest.raises(ValueError, match="source provider"):
+    with pytest.raises(ValueError, match="result provider as their source"):
         ProviderDiscoveryResult(
             provider_id="host.native",
             capabilities=(make_capability(provider_id="other.provider"),),
