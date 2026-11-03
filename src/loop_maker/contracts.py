@@ -22,6 +22,14 @@ class AgentResult:
     metadata: dict[str, Any] = field(default_factory=dict)
 
 @dataclass(slots=True)
+class EvaluationResult:
+    """Evidence-backed evaluation of mandatory acceptance criteria."""
+    verified_criteria: list[str] = field(default_factory=list)
+    failed_criteria: list[str] = field(default_factory=list)
+    evidence: list[str] = field(default_factory=list)
+    feedback: str | None = None
+
+@dataclass(slots=True)
 class LoopConfig:
     max_iterations: int = 3
     mode: str = "BASIC"
@@ -46,4 +54,9 @@ class AgentAdapter(Protocol):
         ...
     def capabilities(self) -> dict[str, Any]:
         """Describe optional features; never claim unsupported capabilities."""
+        ...
+
+class Evaluator(Protocol):
+    async def evaluate(self, task: Task, result: AgentResult) -> EvaluationResult:
+        """Verify criteria and return evidence; do not rely on agent confidence."""
         ...
