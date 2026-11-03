@@ -11,10 +11,11 @@ def _now() -> str:
 class SessionStore:
     def __init__(self, database: str = "loop-maker.sqlite3") -> None:
         self.database = database
+        self._memory_connection = sqlite3.connect(":memory:") if database == ":memory:" else None
         self._initialize()
 
     def _connect(self) -> sqlite3.Connection:
-        connection = sqlite3.connect(self.database)
+        connection = self._memory_connection or sqlite3.connect(self.database)
         connection.row_factory = sqlite3.Row
         return connection
 
@@ -72,3 +73,8 @@ class SessionStore:
         with self._connect() as db:
             row = db.execute("SELECT * FROM sessions WHERE session_id=?", (session_id,)).fetchone()
             return dict(row) if row else None
+
+    def close(self) -> None:
+        if self._memory_connection is not None:
+            self._memory_connection.close()
+            self._memory_connection = None
