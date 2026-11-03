@@ -17,7 +17,7 @@ Instala las skills en el proyecto y abre ese proyecto con tu agente habitual.
 ### Linux / macOS
 
 ```bash
-LOOP_MAKER_BRANCH=feat/agent-agnostic-orchestrator \\\n  bash <(curl -fsSL https://raw.githubusercontent.com/thewild001/loop-maker/feat/agent-agnostic-orchestrator/bootstrap.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/thewild001/loop-maker/main/bootstrap.sh)
 ```
 
 Para instalar en otra carpeta:
@@ -29,17 +29,17 @@ bash <(curl -fsSL https://raw.githubusercontent.com/thewild001/loop-maker/main/b
 ### Windows PowerShell
 
 ```powershell
-irm https://raw.githubusercontent.com/thewild001/loop-maker/feat/agent-agnostic-orchestrator/bootstrap.ps1 | iex
+irm https://raw.githubusercontent.com/thewild001/loop-maker/main/bootstrap.ps1 | iex
 ```
 
-Para instalar en una ruta específica, descarga el script y ejecútalo con parámetros:
+Para especificar destino, descarga el script y ejecútalo:
 
 ```powershell
-Invoke-WebRequest https://raw.githubusercontent.com/thewild001/loop-maker/feat/agent-agnostic-orchestrator/bootstrap.ps1 -OutFile .\loop-maker-bootstrap.ps1
+Invoke-WebRequest https://raw.githubusercontent.com/thewild001/loop-maker/main/bootstrap.ps1 -OutFile .\loop-maker-bootstrap.ps1
 .\loop-maker-bootstrap.ps1 -Target "C:\ruta\al\proyecto"
 ```
 
-Estos comandos instalan la rama de desarrollo de esta PR; cuando se integre, sustituye la rama por main. Los archivos existentes se preservan por defecto; `--force` / `-Force` permite reemplazar archivos administrados por Loop Maker.
+Los archivos existentes se preservan por defecto; `--force` / `-Force` permite reemplazar archivos administrados por Loop Maker.
 
 Después invoca la skill desde un host compatible:
 
