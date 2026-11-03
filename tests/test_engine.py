@@ -24,7 +24,7 @@ class EvidenceEvaluator:
     async def evaluate(self, task, result):
         return EvaluationResult(
             verified_criteria=list(task.acceptance_criteria),
-            evidence=["test suite passed"],
+            evidence={"tests pass": "pytest -q: all tests passed"},
         )
 
 @pytest.mark.asyncio
