@@ -165,7 +165,7 @@ class SkillProposalStore:
             "non_empty": bool(row["proposed_content"].strip()),
             "size_limit": len(row["proposed_content"].encode("utf-8")) <= 256_000,
             "has_frontmatter": row["proposed_content"].startswith("---\n"),
-            "has_skill_name": bool(re.search(r"(?m)^name:\\s*\\S+", row["proposed_content"])),
+            "has_skill_name": bool(re.search(r"(?m)^name:\s*\S+", row["proposed_content"])),
             "has_supporting_observations": bool(json.loads(row["observation_ids_json"])),
         }
         active_unchanged = False
