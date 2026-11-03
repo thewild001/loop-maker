@@ -62,7 +62,7 @@ When asked to review learning:
 5. Report candidate patterns with supporting observation IDs.
 6. State when evidence is insufficient.
 
-Candidate groups are a discovery aid, not proof that a skill should change. The next Evolution phase will introduce proposal generation, staging and validation.
+Candidate groups are a discovery aid, not proof that a skill should change. For an evidence-based review, call `loop_evolution_review` with `min_sessions` (default 2) and a bounded `limit`.\n\nThe review engine requires distinct, non-empty session IDs before counting recurrence. It reports project diversity only when `context.project` exists, and may flag coexisting positive and friction observations as mixed signals. Mixed signals are not automatically contradictions. Its impact score is a heuristic for prioritizing human review, not a probability, causal claim or recommendation to edit a skill.\n\nAlways inspect the supporting observation IDs and context, report limitations, and avoid generalizing across projects without evidence. The review engine does not generate or publish skill changes.
 
 ## Output
 
