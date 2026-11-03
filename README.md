@@ -172,7 +172,7 @@ make verify
 | MCP tools/resources/prompts | Implementación inicial |
 | Registro de plugins Python | Implementado |
 | Adapters nativos para hosts populares | Pendiente |
-| Evaluación semántica independiente | Pendiente |
+| Contrato de evaluator independiente | Implementado; falta evaluador semántico de referencia |
 | Recuperación avanzada / checkpoints | Pendiente |
 | PostgreSQL / observabilidad | Pendiente |
 | A2A / coordinación multiagente | Pendiente |
@@ -187,4 +187,4 @@ La rama inicial no debe considerarse lista para producción hasta que CI, prueba
 
 ## Licencia
 
-MIT. Ver LICENSE cuando se incorpore la licencia definitiva.
+MIT. Ver LICENSE.
