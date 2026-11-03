@@ -69,6 +69,16 @@ class SessionStore:
 
     def finish_session(self, session_id: str, status: str, converged: bool, output: str) -> None:
         with self._connect() as db:
+            exists = db.execute("SELECT 1 FROM sessions WHERE session_id=?", (session_id,)).fetchone()
+            if not exists:
+                raise KeyError(f"Unknown session: {session_id}")
+            if converged:
+                accepted = db.execute(
+                    "SELECT 1 FROM iterations WHERE session_id=? AND accepted=1 LIMIT 1",
+                    (session_id,),
+                ).fetchone()
+                if status != "COMPLETED" or not accepted:
+                    raise ValueError("A converged session needs COMPLETED status and an accepted iteration")
             db.execute("""UPDATE sessions SET status=?, converged=?, output=?, updated_at=?
                 WHERE session_id=?""", (status, int(converged), output, _now(), session_id))
 
