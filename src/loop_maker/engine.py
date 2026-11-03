@@ -66,6 +66,9 @@ class LoopEngine:
                     result.feedback or evaluation["reason"]
                     or "Improve the result against the original acceptance criteria."
                 )
+            except asyncio.CancelledError:
+                self.store.finish_session(session_id, "CANCELLED", False, last_output)
+                raise
             except EvaluationFailure as exc:
                 errors.append({"code": "H", "message": str(exc)})
                 self.store.record_error(session_id, iteration, "H", str(exc))
