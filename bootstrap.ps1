@@ -1,5 +1,5 @@
 param(
-  [string]$Branch = "main",
+  [string]$Branch = "feat/agent-agnostic-orchestrator",
   [string]$Target = (Get-Location).Path,
   [switch]$Force
 )
@@ -24,7 +24,7 @@ try {
   foreach ($relativeTarget in @(".agents/skills", ".claude/skills", ".opencode/skills")) {
     $sourceRoot = Join-Path $root.FullName "skills"
     Get-ChildItem -Path $sourceRoot -File -Recurse | ForEach-Object {
-      $relative = $_.FullName.Substring($sourceRoot.Length).TrimStart("\", "/")
+      $relative = $_.FullName.Substring($sourceRoot.Length).TrimStart([char[]]@(92, 47))
       Copy-LoopMakerFile $_.FullName (Join-Path (Join-Path $Target $relativeTarget) $relative)
     }
   }
