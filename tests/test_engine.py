@@ -65,3 +65,18 @@ def test_rejects_zero_iteration_budget():
         asyncio.run(LoopEngine().run(
             CompletingAgent(), Task("test"), LoopConfig(max_iterations=0)
         ))
+
+@pytest.mark.asyncio
+async def test_cancelled_execution_is_persisted_as_terminal_state():
+    from loop_maker.storage import SessionStore
+    store = SessionStore(":memory:")
+    engine = LoopEngine(store)
+    running = asyncio.create_task(engine.run(
+        NeverCompletesAgent(), Task("cancel me"),
+        LoopConfig(session_id="cancel-session", max_iterations=5),
+    ))
+    await asyncio.sleep(0)
+    running.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await running
+    assert store.get_session("cancel-session")["status"] == "CANCELLED"
