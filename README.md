@@ -249,7 +249,14 @@ El servidor expone las siguientes operaciones:
 
 El journal utiliza SQLite. Por defecto crea `loop-maker.sqlite3` en el directorio de trabajo; puedes cambiar la ubicación mediante `LOOP_MAKER_DB`.
 
-Consulta [la guía de configuración MCP](integrations/mcp/README.md) para conectar el servidor con Codex, Claude Code, Cursor u OpenCode.
+También puedes ejecutar el MCP dentro de Docker, sin instalar Python en el host:
+
+```bash
+docker build -t loop-maker-mcp:local .
+docker volume create loop-maker-data
+```
+
+Configura el cliente para ejecutar `docker run --rm -i -v loop-maker-data:/data loop-maker-mcp:local` como servidor MCP stdio. No se expone ningún puerto y el volumen conserva el journal SQLite. Consulta [la guía Docker MCP](docs/docker-mcp.md) y [la configuración MCP por host](integrations/mcp/README.md) para los ejemplos completos.
 
 ## Crear adapters y evaluadores
 
