@@ -1,18 +1,42 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TARGET="${1:-.}"
+TARGET="."
+FORCE="${LOOP_MAKER_FORCE:-0}"
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --force) FORCE=1 ;;
+    -h|--help)
+      echo "Usage: bash scripts/install-skills.sh [--force] [target-directory]"
+      echo "Default: preserve existing files; --force replaces Loop Maker-owned files."
+      exit 0
+      ;;
+    *) TARGET="$1" ;;
+  esac
+  shift
+done
 mkdir -p "$TARGET"
-install_skill_dir() {
-  local destination="$1"
-  mkdir -p "$TARGET/$destination"
-  cp -R "$ROOT/skills/." "$TARGET/$destination/"
+copy_file() {
+  local source="$1" destination="$2"
+  mkdir -p "$(dirname "$destination")"
+  if [[ -e "$destination" && "$FORCE" != "1" ]]; then
+    echo "Preserved existing: $destination"
+    return
+  fi
+  cp "$source" "$destination"
+  echo "Installed: $destination"
 }
-install_skill_dir ".agents/skills"
-install_skill_dir ".claude/skills"
-install_skill_dir ".opencode/skills"
-mkdir -p "$TARGET/.opencode/agents"
-cp "$ROOT/agents/loop-maker-orchestrator.md" "$TARGET/.opencode/agents/"
-mkdir -p "$TARGET/.cursor/rules"
-cp "$ROOT/integrations/cursor/loop-maker.mdc" "$TARGET/.cursor/rules/"
+copy_tree() {
+  local source="$1" destination="$2" file relative
+  mkdir -p "$destination"
+  while IFS= read -r -d '' file; do
+    relative="${file#"$source"/}"
+    copy_file "$file" "$destination/$relative"
+  done < <(find "$source" -type f -print0)
+}
+copy_tree "$ROOT/skills" "$TARGET/.agents/skills"
+copy_tree "$ROOT/skills" "$TARGET/.claude/skills"
+copy_tree "$ROOT/skills" "$TARGET/.opencode/skills"
+copy_file "$ROOT/agents/loop-maker-orchestrator.md" "$TARGET/.opencode/agents/loop-maker-orchestrator.md"
+copy_file "$ROOT/integrations/cursor/loop-maker.mdc" "$TARGET/.cursor/rules/loop-maker.mdc"
 echo "Loop Maker skills installed into $TARGET"
