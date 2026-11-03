@@ -1,0 +1,12 @@
+---
+description: Política de iteración acotada y convergencia independiente del agente
+alwaysApply: false
+---
+
+Cuando una tarea requiera ejecución iterativa, sigue el workflow de Loop Maker:
+diagnosticar, definir criterios de aceptación, ejecutar una unidad de trabajo acotada,
+validar evidencias, cambiar de estrategia cuando un reintento esté justificado y detenerse
+al alcanzar límites de seguridad, recursos o iteraciones.
+
+No declares convergencia sin satisfacer los criterios obligatorios. Consulta las skills
+canónicas en skills/loop-maker-orchestrator/SKILL.md.
