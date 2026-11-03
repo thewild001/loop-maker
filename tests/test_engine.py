@@ -1,7 +1,9 @@
 import asyncio
 import pytest
 
-from loop_maker.contracts import AgentResult, LoopConfig, Task
+from loop_maker.contracts import (
+    AgentResult, EvaluationResult, LoopConfig, Task,
+)
 from loop_maker.engine import LoopEngine
 
 class CompletingAgent:
@@ -18,6 +20,13 @@ class NeverCompletesAgent:
     async def execute(self, task, context):
         return AgentResult(output="work in progress", complete=False, feedback="continue")
 
+class EvidenceEvaluator:
+    async def evaluate(self, task, result):
+        return EvaluationResult(
+            verified_criteria=list(task.acceptance_criteria),
+            evidence=["test suite passed"],
+        )
+
 @pytest.mark.asyncio
 async def test_converges_when_agent_returns_complete_result():
     result = await LoopEngine().run(CompletingAgent(), Task("test"))
@@ -33,6 +42,23 @@ async def test_stops_at_iteration_budget():
     assert result.converged is False
     assert result.status == "CIRCUIT_BROKEN"
     assert result.iterations == 2
+
+@pytest.mark.asyncio
+async def test_mandatory_criteria_need_independent_evaluator():
+    result = await LoopEngine().run(
+        CompletingAgent(), Task("test", acceptance_criteria=["tests pass"])
+    )
+    assert result.status == "FAILED"
+    assert result.errors[0]["code"] == "H"
+    assert result.converged is False
+
+@pytest.mark.asyncio
+async def test_evaluator_must_verify_all_mandatory_criteria():
+    result = await LoopEngine(evaluator=EvidenceEvaluator()).run(
+        CompletingAgent(), Task("test", acceptance_criteria=["tests pass"])
+    )
+    assert result.status == "COMPLETED"
+    assert result.converged is True
 
 def test_rejects_zero_iteration_budget():
     with pytest.raises(ValueError):
