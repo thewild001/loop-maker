@@ -148,3 +148,109 @@ def test_assessment_cannot_reference_unknown_capability():
             availability=Availability.UNKNOWN,
             authorization=Authorization.UNKNOWN,
         ),))
+
+
+@pytest.mark.asyncio
+async def test_host_inventory_is_always_discovered():
+    from loop_maker.capabilities.discovery import CapabilityDiscovery, HostInventoryProvider
+    from loop_maker.capabilities.models import DiscoveryContext
+
+    capability = make_capability(provider_id="host.inventory")
+    inventory = await CapabilityDiscovery(
+        HostInventoryProvider((capability,))
+    ).discover(DiscoveryContext())
+    assert [item.id for item in inventory.capabilities] == [capability.id]
+
+
+@pytest.mark.asyncio
+async def test_supplemental_provider_requires_explicit_allowlist():
+    from loop_maker.capabilities.discovery import CapabilityDiscovery, HostInventoryProvider
+    from loop_maker.capabilities.models import DiscoveryContext
+
+    supplemental = make_capability(
+        capability_id="agent:extra:research",
+        provider_id="extra",
+    )
+    class SupplementalProvider:
+        provider_id = "extra"
+
+        async def discover(self, context):
+            return ProviderDiscoveryResult(
+                provider_id=self.provider_id,
+                capabilities=(supplemental,),
+            )
+
+    discovery = CapabilityDiscovery(
+        HostInventoryProvider(),
+        (SupplementalProvider(),),
+    )
+    without_permission = await discovery.discover(DiscoveryContext())
+    with_permission = await discovery.discover(
+        DiscoveryContext(allowed_providers=("extra",))
+    )
+    assert not without_permission.capabilities
+    assert [item.id for item in with_permission.capabilities] == [supplemental.id]
+
+
+@pytest.mark.asyncio
+async def test_provider_failure_does_not_discard_host_inventory():
+    from loop_maker.capabilities.discovery import CapabilityDiscovery, HostInventoryProvider
+    from loop_maker.capabilities.models import DiscoveryContext
+
+    host_capability = make_capability(provider_id="host.inventory")
+    class BrokenProvider:
+        provider_id = "broken"
+
+        async def discover(self, context):
+            raise RuntimeError("internal details must not leak")
+
+    inventory = await CapabilityDiscovery(
+        HostInventoryProvider((host_capability,)),
+        (BrokenProvider(),),
+    ).discover(DiscoveryContext(allowed_providers=("broken",)))
+    assert [item.id for item in inventory.capabilities] == [host_capability.id]
+    assert inventory.provider_results[1].status is ProviderStatus.FAILED
+    assert "internal details" not in inventory.provider_results[1].errors[0].message
+
+
+@pytest.mark.asyncio
+async def test_entry_point_provider_normalizes_existing_adapter_without_loading_plugins():
+    from loop_maker.capabilities.discovery import EntryPointAdapterProvider
+    from loop_maker.capabilities.models import DiscoveryContext
+
+    class ExistingAdapter:
+        agent_id = "research-agent"
+
+        def capabilities(self):
+            return {"web_search": True}
+
+        async def execute(self, task, context):
+            raise AssertionError("discovery must never execute an adapter")
+
+    result = await EntryPointAdapterProvider(
+        {"research": ExistingAdapter()}
+    ).discover(DiscoveryContext())
+    assert result.status is ProviderStatus.SUCCESS
+    descriptor = result.capabilities[0]
+    assert descriptor.category is CapabilityCategory.AGENT
+    assert descriptor.interface.kind is InterfaceKind.DELEGATED_AGENT
+    assert descriptor.metadata["legacy_capabilities"] == {"web_search": True}
+
+
+@pytest.mark.asyncio
+async def test_entry_point_provider_reports_invalid_adapter_partially():
+    from loop_maker.capabilities.discovery import EntryPointAdapterProvider
+    from loop_maker.capabilities.models import DiscoveryContext
+
+    class InvalidAdapter:
+        agent_id = "broken"
+
+        def capabilities(self):
+            return []
+
+    result = await EntryPointAdapterProvider(
+        {"broken": InvalidAdapter()}
+    ).discover(DiscoveryContext())
+    assert result.status is ProviderStatus.FAILED
+    assert result.complete is False
+    assert result.errors[0].code == "adapter_contract_invalid"
