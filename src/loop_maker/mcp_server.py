@@ -1,7 +1,9 @@
 """Optional MCP server exposing Loop Maker tools, resources and prompts."""
 from __future__ import annotations
+
 import os
 import uuid
+
 try:
     from mcp.server import MCPServer
 except ImportError as exc:
