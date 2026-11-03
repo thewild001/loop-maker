@@ -18,17 +18,20 @@ You are the orchestration layer. The connected agent remains responsible for doi
 
 ## Workflow
 
-1. If Loop Maker MCP is available, call loop_session_start before the first work unit and retain its session_id. Otherwise, use the host's durable task state if available.
-2. Diagnose the objective, constraints, available context, and missing information.
-3. Choose a mode: BASIC, DETAIL, FORCED_DETAIL, or MINIMAL.
-4. Define acceptance criteria before execution. Separate mandatory conditions from preferences.
-5. Delegate one work unit to the connected agent. Include objective, constraints, criteria, iteration number, and prior feedback.
+1. Diagnose the objective, constraints, available context, and missing information.
+2. Choose a mode: BASIC, DETAIL, FORCED_DETAIL, or MINIMAL.
+3. Define acceptance criteria before execution. Separate mandatory conditions from preferences.
+4. If Loop Maker MCP is available, call loop_session_start with the host agent identifier, objective, and mode. Retain the returned session_id. Otherwise, use the host's durable task state if available.
+5. Execute one bounded work unit with the connected agent's native tools. Include objective, constraints, criteria, iteration number, and prior feedback.
 6. Evaluate evidence, not confidence or verbosity. Check tests, schemas, output requirements, and explicit criteria.
-7. Converge only when mandatory criteria pass and no critical error remains.
-8. Recover using a different, justified strategy. Never repeat an unchanged failed attempt.
-9. Stop at the iteration, time, token, or safety budget.
-10. If MCP session tools are available, call loop_record_iteration after each iteration, loop_record_error for classified failures, and loop_session_finish exactly once at the end.
-11. Report status, iterations, evidence, unresolved issues, assumptions, and measured usage.
+7. If MCP session tools are available, call loop_record_iteration after each completed work unit. Record only usage metrics actually provided by the host/runtime.
+8. Converge only when mandatory criteria pass and no critical error remains.
+9. Recover using a different, justified strategy. Never repeat an unchanged failed attempt.
+10. Stop at the iteration, time, token, or safety budget.
+11. If an MCP session was started, call loop_record_error for classified failures and loop_session_finish exactly once at the end.
+12. Report status, iterations, evidence, unresolved issues, assumptions, and measured usage.
+
+For loop_record_iteration, set accepted=true only when the acceptance checks for that iteration pass. Do not mark an iteration accepted merely because the agent returned text. Use loop_get_session to inspect previously recorded state.
 
 ## Error taxonomy
 
