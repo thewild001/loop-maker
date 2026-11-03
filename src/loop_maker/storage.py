@@ -51,12 +51,15 @@ class SessionStore:
                 (session_id, agent_id, objective, mode, now, now))
 
     def record_iteration(self, session_id: str, iteration: int, output: str,
-                         accepted: bool, usage: dict[str, Any],
-                         metadata: dict[str, Any]) -> None:
+                         accepted: bool, usage: dict[str, Any] | None = None,
+                         metadata: dict[str, Any] | None = None) -> None:
         with self._connect() as db:
+            exists = db.execute("SELECT 1 FROM sessions WHERE session_id=?", (session_id,)).fetchone()
+            if not exists:
+                raise KeyError(f"Unknown session: {session_id}")
             db.execute("INSERT INTO iterations VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (session_id, iteration, output, int(accepted), json.dumps(usage),
-                 json.dumps(metadata), _now()))
+                (session_id, iteration, output, int(accepted), json.dumps(usage or {}),
+                 json.dumps(metadata or {}), _now()))
 
     def record_error(self, session_id: str, iteration: int, code: str, message: str) -> None:
         with self._connect() as db:
@@ -72,7 +75,23 @@ class SessionStore:
     def get_session(self, session_id: str) -> dict[str, Any] | None:
         with self._connect() as db:
             row = db.execute("SELECT * FROM sessions WHERE session_id=?", (session_id,)).fetchone()
-            return dict(row) if row else None
+            if not row:
+                return None
+            session = dict(row)
+            session["iterations"] = [
+                {**dict(item), "accepted": bool(item["accepted"]),
+                 "usage": json.loads(item.pop("usage_json")),
+                 "metadata": json.loads(item.pop("metadata_json"))}
+                for item in db.execute(
+                    "SELECT * FROM iterations WHERE session_id=? ORDER BY iteration", (session_id,)
+                ).fetchall()
+            ]
+            session["errors"] = [
+                dict(item) for item in db.execute(
+                    "SELECT * FROM errors WHERE session_id=? ORDER BY id", (session_id,)
+                ).fetchall()
+            ]
+            return session
 
     def close(self) -> None:
         if self._memory_connection is not None:
