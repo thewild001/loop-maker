@@ -6,7 +6,7 @@ import json
 from .contracts import LoopConfig, Task
 from .demo_agent import DemoAgent
 from .engine import LoopEngine
-from .registry import discover_adapters
+from .registry import discover_adapters, discover_evaluator
 from .storage import SessionStore
 
 def main() -> None:
@@ -23,7 +23,7 @@ def main() -> None:
     adapters = {"demo": DemoAgent(), **discover_adapters()}
     if args.agent not in adapters:
         parser.error(f"Unknown agent '{args.agent}'. Installed adapters: {', '.join(sorted(adapters))}")
-    engine = LoopEngine(SessionStore(args.db))
+    engine = LoopEngine(SessionStore(args.db), evaluator=discover_evaluator())
     result = asyncio.run(engine.run(adapters[args.agent], Task(objective=args.objective),
         LoopConfig(max_iterations=args.max_iterations, mode=args.mode)))
     print(json.dumps({
