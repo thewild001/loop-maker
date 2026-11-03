@@ -256,7 +256,7 @@ docker build -t loop-maker-mcp:local .
 docker volume create loop-maker-data
 ```
 
-Configura el cliente para ejecutar `docker run --rm -i -v loop-maker-data:/data loop-maker-mcp:local` como servidor MCP stdio. No se expone ningún puerto y el volumen conserva el journal SQLite. Consulta [la guía Docker MCP](docs/docker-mcp.md) y [la configuración MCP por host](integrations/mcp/README.md) para los ejemplos completos.
+Configura el cliente para ejecutar `docker run --rm -i -v loop-maker-data:/data loop-maker-mcp:local` como servidor MCP stdio. No se expone ningún puerto y el volumen conserva el journal SQLite. Consulta [la guía Docker MCP](docs/docker-mcp.md) y [la configuración MCP por host](integrations/mcp/README.md) para los ejemplos completos. Si tu agente ya tiene un servidor de memoria como Engram configurado, Loop Maker puede utilizarlo sin conexión adicional; consulta [la guía de memoria externa](docs/external-memory.md).
 
 ## Crear adapters y evaluadores
 
