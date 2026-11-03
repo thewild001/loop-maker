@@ -1,11 +1,18 @@
 """Bounded orchestration loop with injectable agent, evaluator and persistence."""
 from __future__ import annotations
+
 import asyncio
 import uuid
 from typing import Any
+
 from .contracts import (
-    AgentAdapter, AgentResult, EvaluationResult, Evaluator,
-    LoopConfig, LoopResult, Task,
+    AgentAdapter,
+    AgentResult,
+    EvaluationResult,
+    Evaluator,
+    LoopConfig,
+    LoopResult,
+    Task,
 )
 from .storage import SessionStore
 
@@ -55,7 +62,7 @@ class LoopEngine:
                         self._evaluate(task, result, config),
                         timeout=float(task.metadata.get("evaluation_timeout_seconds", 120)),
                     )
-                except asyncio.TimeoutError as exc:
+                except TimeoutError as exc:
                     raise EvaluationFailure("Evaluator timed out") from exc
                 self.store.record_iteration(
                     session_id, iteration, last_output, evaluation["accepted"],
@@ -77,12 +84,12 @@ class LoopEngine:
                 self.store.record_error(session_id, iteration, "H", str(exc))
                 status = "FAILED"
                 break
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 errors.append({"code": "F", "message": "Agent execution timed out"})
                 self.store.record_error(session_id, iteration, "F", errors[-1]["message"])
                 status = "CIRCUIT_BROKEN"
                 break
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 - normalize arbitrary adapter failures at the boundary
                 errors.append({"code": "D", "message": f"{type(exc).__name__}: {exc}"})
                 self.store.record_error(session_id, iteration, "D", errors[-1]["message"])
                 status = "FAILED"
