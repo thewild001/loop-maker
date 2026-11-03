@@ -124,6 +124,16 @@ class LoopEngine:
                 raise EvaluationFailure(f"Evaluator failed: {type(exc).__name__}: {exc}") from exc
             if not isinstance(evaluation, EvaluationResult):
                 raise EvaluationFailure("Evaluator must return EvaluationResult")
+            if (
+                not isinstance(evaluation.verified_criteria, list)
+                or not isinstance(evaluation.failed_criteria, list)
+                or not isinstance(evaluation.evidence, dict)
+                or any(
+                    not isinstance(key, str) or not isinstance(value, str)
+                    for key, value in evaluation.evidence.items()
+                )
+            ):
+                raise EvaluationFailure("Evaluator returned an invalid evidence structure")
             required = set(task.acceptance_criteria)
             verified = set(evaluation.verified_criteria)
             failed = set(evaluation.failed_criteria)
