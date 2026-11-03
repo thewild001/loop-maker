@@ -21,11 +21,11 @@ Los paquetes de adaptadores ejecutan código dentro del proceso y deben ser conf
 
 ## Convergencia
 
-El motor inicial utiliza aceptación determinista: éxito del adaptador, tarea marcada como completa y salida no vacía. Los validadores específicos del dominio y evaluadores independientes se incorporarán como componentes separados. Una puntuación LLM por sí sola no satisface criterios obligatorios.
+El motor aplica comprobaciones básicas deterministas (éxito, finalización y salida no vacía). Cuando hay criterios obligatorios, exige un Evaluator independiente que devuelva criterios verificados, fallidos y evidencia específica por criterio. Una puntuación LLM por sí sola no satisface criterios obligatorios.
 
 ## Puntos de extensión
 
-- Grupo de entry points Python: loop_maker.agents.
+- Grupo de entry points Python: loop_maker.agents y loop_maker.evaluators.
 - Protocolo AgentAdapter en src/loop_maker/contracts.py.
 - Skills canónicas en skills/.
 - Herramientas MCP en src/loop_maker/mcp_server.py.
