@@ -1,5 +1,5 @@
 param(
-  [string]$Branch = "feat/agent-agnostic-orchestrator",
+  [string]$Branch = "main",
   [string]$Target = (Get-Location).Path,
   [switch]$Force
 )
