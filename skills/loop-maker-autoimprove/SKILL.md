@@ -1,20 +1,21 @@
 ---
 name: loop-maker-autoimprove
-description: Propose and validate improvements to an existing loop, agent workflow, or Loop Maker configuration.
+description: Improve an existing result, workflow, process, plan, analysis, content artifact, dataset pipeline or agent loop through bounded evidence-based iterations.
 ---
 
 # AUTOIMPROVE
 
-Do not rewrite a loop merely to make it longer or more sophisticated.
+AUTOIMPROVE is multipurpose. The target may be a document, research synthesis, plan, analysis, dataset workflow, software system, operational process, creative artifact or agent workflow.
 
-1. Inspect the current loop and its actual execution evidence.
-2. Identify the three highest-impact defects or bottlenecks.
-3. Classify each issue as Core, Adapter, Agent, Provider, Task, Evaluator, or Environment.
-4. Propose the smallest change that addresses the cause.
-5. Preserve existing behavior unless a change is justified.
-6. Add or update regression cases before accepting the change.
-7. Compare quality, completion rate, latency, and resource usage where measurable.
-8. Reject changes that improve one metric by violating mandatory criteria.
-9. Present a diff and rationale; require approval before publishing or deploying.
+1. Identify the target and the user's definition of better.
+2. Inspect the current artifact/process and available evidence.
+3. Identify the highest-impact defects, bottlenecks or unmet criteria.
+4. Classify each issue in the context of the domain.
+5. Propose the smallest change likely to improve the outcome.
+6. Preserve valid existing work and constraints.
+7. Apply one bounded change.
+8. Evaluate before/after against the same criteria. Use tests for code, source verification for research, rubric review for writing, feasibility checks for plans, data-quality checks for analytics, and user feedback where needed.
+9. Reject changes that improve a secondary metric while violating a mandatory requirement.
+10. Present what changed, evidence, trade-offs and remaining limitations.
 
-Supported focus modifiers: tokens, clarity, quality, Q4, hardware, agent, regression.
+Do not optimize for superficial complexity, length, speed or numeric scores without showing why that improves the requested outcome. Require authorization before publishing, deploying, sending, purchasing or making other consequential external changes.
