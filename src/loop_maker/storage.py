@@ -78,14 +78,15 @@ class SessionStore:
             if not row:
                 return None
             session = dict(row)
-            session["iterations"] = [
-                {**dict(item), "accepted": bool(item["accepted"]),
-                 "usage": json.loads(item.pop("usage_json")),
-                 "metadata": json.loads(item.pop("metadata_json"))}
-                for item in db.execute(
-                    "SELECT * FROM iterations WHERE session_id=? ORDER BY iteration", (session_id,)
-                ).fetchall()
-            ]
+            session["iterations"] = []
+            for item in db.execute(
+                "SELECT * FROM iterations WHERE session_id=? ORDER BY iteration", (session_id,)
+            ).fetchall():
+                iteration = dict(item)
+                iteration["accepted"] = bool(iteration["accepted"])
+                iteration["usage"] = json.loads(iteration.pop("usage_json"))
+                iteration["metadata"] = json.loads(iteration.pop("metadata_json"))
+                session["iterations"].append(iteration)
             session["errors"] = [
                 dict(item) for item in db.execute(
                     "SELECT * FROM errors WHERE session_id=? ORDER BY id", (session_id,)
