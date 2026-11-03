@@ -3,14 +3,11 @@
 Instala las skills compartidas en .claude/skills:
 
 ```bash
-mkdir -p .claude/skills
-cp -R skills/* .claude/skills/
+bash scripts/install-skills.sh /ruta/al/proyecto
 ```
 
-Registra el servidor MCP mediante el comando o configuración stdio soportado por la versión de Claude Code instalada. El paquete local expone:
+Registra el servidor MCP mediante el comando stdio soportado por la versión de Claude Code instalada. Durante el desarrollo, utiliza el ejecutable loop-maker-mcp del entorno virtual del checkout. Consulta ../mcp/README.md para la configuración exacta.
 
-```bash
-uvx --from "loop-maker-orchestrator[mcp]" loop-maker-mcp
-```
+Cuando el paquete esté publicado, podrá utilizarse uvx con el extra mcp.
 
-Las skills son instrucciones portables; MCP proporciona herramientas y acceso a sesiones. Confirma los parámetros de configuración con la documentación de la versión que utilizas.
+Las skills son instrucciones portables; MCP proporciona herramientas y acceso a sesiones.
