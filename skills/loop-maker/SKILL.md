@@ -70,6 +70,7 @@ Choose BASIC unless the user requests another mode or the task's risk, ambiguity
 - loop-maker-diagnostics: diagnose and recover from a failure.
 - loop-maker-autoimprove: make a bounded improvement and validate regressions or quality.
 - loop-maker-stress-test: probe limits and failure modes without unsafe side effects.
+- loop-maker-advisory: optional specialized deliberation for consequential decisions.
 
 ## Non-negotiable rules
 
