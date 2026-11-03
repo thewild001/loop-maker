@@ -1,8 +1,12 @@
 import asyncio
+
 import pytest
 
 from loop_maker.contracts import (
-    AgentResult, EvaluationResult, LoopConfig, Task,
+    AgentResult,
+    EvaluationResult,
+    LoopConfig,
+    Task,
 )
 from loop_maker.engine import LoopEngine
 
