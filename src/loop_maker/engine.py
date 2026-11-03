@@ -50,10 +50,13 @@ class LoopEngine:
                 if not isinstance(result, AgentResult):
                     raise TypeError("AgentAdapter.execute() must return AgentResult")
                 last_output = result.output or ""
-                evaluation = await asyncio.wait_for(
-                    self._evaluate(task, result, config),
-                    timeout=float(task.metadata.get("evaluation_timeout_seconds", 120)),
-                )
+                try:
+                    evaluation = await asyncio.wait_for(
+                        self._evaluate(task, result, config),
+                        timeout=float(task.metadata.get("evaluation_timeout_seconds", 120)),
+                    )
+                except asyncio.TimeoutError as exc:
+                    raise EvaluationFailure("Evaluator timed out") from exc
                 self.store.record_iteration(
                     session_id, iteration, last_output, evaluation["accepted"],
                     result.usage, {**result.metadata, "evaluation": evaluation},
