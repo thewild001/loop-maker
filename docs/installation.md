@@ -2,21 +2,18 @@
 
 Loop Maker se utiliza desde el agente que ya empleas. No instala un agente nuevo ni cambia el proveedor de modelos. La instalación añade skills e instrucciones al proyecto; MCP es opcional y aporta persistencia de sesiones y herramientas compartidas.
 
+> Mientras esta implementación permanezca en revisión, utiliza la rama `feat/agent-agnostic-orchestrator`. Tras integrarse, cambia la referencia por `main`.
+
 ## Linux / macOS
 
-Instalación directa:
+Instalación desde la rama de desarrollo:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/thewild001/loop-maker/main/bootstrap.sh)
+LOOP_MAKER_BRANCH=feat/agent-agnostic-orchestrator \
+  bash <(curl -fsSL https://raw.githubusercontent.com/thewild001/loop-maker/feat/agent-agnostic-orchestrator/bootstrap.sh)
 ```
 
 Instalación en otra carpeta:
-
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/thewild001/loop-maker/main/bootstrap.sh) --target /ruta/al/proyecto
-```
-
-Para probar una rama:
 
 ```bash
 LOOP_MAKER_BRANCH=feat/agent-agnostic-orchestrator \
@@ -32,19 +29,18 @@ bash scripts/install-skills.sh --target /ruta/al/proyecto
 
 ## Windows PowerShell
 
+Descarga y ejecuta el script:
+
 ```powershell
-$installer = "https://raw.githubusercontent.com/thewild001/loop-maker/main/bootstrap.ps1"
-Invoke-RestMethod $installer | Invoke-Expression
+Invoke-WebRequest "https://raw.githubusercontent.com/thewild001/loop-maker/feat/agent-agnostic-orchestrator/bootstrap.ps1" -OutFile ".\\loop-maker-bootstrap.ps1"
+.\\loop-maker-bootstrap.ps1
 ```
 
 Para especificar destino o rama:
 
 ```powershell
-$script = Invoke-RestMethod "https://raw.githubusercontent.com/thewild001/loop-maker/main/bootstrap.ps1"
-Invoke-Expression $script -Target "C:\\ruta\\al\\proyecto" -Branch "main"
+.\\loop-maker-bootstrap.ps1 -Target "C:\\ruta\\al\\proyecto" -Branch "feat/agent-agnostic-orchestrator"
 ```
-
-Para instalar la rama de desarrollo, sustituye main por feat/agent-agnostic-orchestrator.
 
 ## Uso desde el agente
 
