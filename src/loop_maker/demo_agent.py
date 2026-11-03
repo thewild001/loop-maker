@@ -1,4 +1,5 @@
 """Deterministic demo adapter; it proves the contract and is not an LLM agent."""
+
 from .contracts import AgentResult, Task
 
 class DemoAgent:
