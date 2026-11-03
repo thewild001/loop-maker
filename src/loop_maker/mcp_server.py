@@ -10,12 +10,12 @@ except ImportError as exc:
 from .contracts import LoopConfig, Task
 from .demo_agent import DemoAgent
 from .engine import LoopEngine
-from .registry import discover_adapters
+from .registry import discover_adapters, discover_evaluator
 from .storage import SessionStore
 
 mcp = MCPServer("loop-maker-orchestrator")
 store = SessionStore(os.getenv("LOOP_MAKER_DB", "loop-maker.sqlite3"))
-engine = LoopEngine(store)
+engine = LoopEngine(store, evaluator=discover_evaluator())
 agents = {"demo": DemoAgent(), **discover_adapters()}
 VALID_MODES = {"BASIC", "DETAIL", "FORCED_DETAIL", "MINIMAL"}
 VALID_STATUSES = {"COMPLETED", "PARTIAL", "FAILED", "CIRCUIT_BROKEN", "CANCELLED"}
