@@ -144,6 +144,10 @@ class CapabilityDescriptor:
         if not isinstance(self.constraints, CapabilityConstraints):
             raise TypeError("constraints must be CapabilityConstraints")
         _require_mapping(self.metadata, "metadata")
+        if not isinstance(self.operations, tuple) or not all(
+            isinstance(operation, CapabilityOperation) for operation in self.operations
+        ):
+            raise TypeError("operations must be a tuple of CapabilityOperation")
         operation_ids = [operation.id for operation in self.operations]
         if len(operation_ids) != len(set(operation_ids)):
             raise ValueError("operation IDs must be unique within a capability")
@@ -183,6 +187,10 @@ class DiscoveryContext:
     metadata: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
+        if self.objective is not None:
+            _require_text(self.objective, "objective")
+        if not all(isinstance(item, CapabilityCategory) for item in self.requested_categories):
+            raise TypeError("requested_categories must contain CapabilityCategory values")
         for provider_id in self.allowed_providers:
             _require_text(provider_id, "allowed provider")
         _require_mapping(self.metadata, "metadata")
@@ -212,12 +220,15 @@ class ProviderDiscoveryResult:
         _require_text(self.provider_id, "provider_id")
         if not isinstance(self.status, ProviderStatus):
             raise TypeError("status must be a ProviderStatus")
-        if self.status is ProviderStatus.FAILED and self.capabilities:
-            raise ValueError("a failed provider result cannot contain capabilities")
-        if self.status is ProviderStatus.PARTIAL and not self.errors:
-            raise ValueError("a partial provider result must explain its errors")
-        if self.status is ProviderStatus.SUCCESS and self.errors:
-            raise ValueError("a successful provider result cannot contain errors")
+        if self.status is ProviderStatus.FAILED:
+            if self.capabilities:
+                raise ValueError("a failed provider result cannot contain capabilities")
+            if not self.errors or self.complete:
+                raise ValueError("a failed provider result must be incomplete and explain its errors")
+        if self.status is ProviderStatus.PARTIAL and (not self.errors or self.complete):
+            raise ValueError("a partial provider result must be incomplete and explain its errors")
+        if self.status is ProviderStatus.SUCCESS and (self.errors or not self.complete):
+            raise ValueError("a successful provider result must be complete and contain no errors")
         if any(item.source.provider_id != self.provider_id for item in self.capabilities):
             raise ValueError("all capabilities must identify the result provider as their source")
 
@@ -231,9 +242,18 @@ class CapabilityInventory:
     provider_results: tuple[ProviderDiscoveryResult, ...] = ()
 
     def __post_init__(self) -> None:
+        if not all(isinstance(item, CapabilityDescriptor) for item in self.capabilities):
+            raise TypeError("capabilities must contain CapabilityDescriptor values")
+        if not all(isinstance(item, CapabilityAssessment) for item in self.assessments):
+            raise TypeError("assessments must contain CapabilityAssessment values")
+        if not all(isinstance(item, ProviderDiscoveryResult) for item in self.provider_results):
+            raise TypeError("provider_results must contain ProviderDiscoveryResult values")
         capability_ids = [item.id for item in self.capabilities]
         if len(capability_ids) != len(set(capability_ids)):
             raise ValueError("capability IDs must be unique within an inventory")
+        provider_ids = [item.provider_id for item in self.provider_results]
+        if len(provider_ids) != len(set(provider_ids)):
+            raise ValueError("provider IDs must be unique within an inventory")
         known_ids = set(capability_ids)
         operations_by_capability = {
             item.id: {operation.id for operation in item.operations}
