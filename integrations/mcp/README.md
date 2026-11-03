@@ -74,6 +74,12 @@ Añade a la configuración MCP del proyecto:
 
 Configura un servidor MCP local que invoque el ejecutable loop-maker-mcp del entorno virtual. La forma exacta del bloque mcp puede variar por versión; consulta la documentación de OpenCode antes de copiar una configuración entre versiones.
 
+## Memoria externa (Engram)
+
+Loop Maker y Engram son servidores MCP independientes. Si Engram ya está configurado en OpenCode, Claude Code, Codex u otro host, no lo registres de nuevo ni añadas un cliente Engram dentro de Loop Maker. El agente utilizará las herramientas de memoria que el host le exponga; la skill principal documenta cuándo recuperar y persistir conocimiento. La integración es opcional y no cambia el contenedor Docker ni el journal SQLite de Loop Maker.
+
+Consulta [la guía de memoria externa](../../docs/external-memory.md) y la [documentación oficial de Engram](https://github.com/Gentleman-Programming/engram) para configurar el servidor en el host.
+
 ## Cuando el paquete se publique
 
 Una vez que loop-maker-orchestrator esté publicado en el índice Python configurado, puede utilizarse uvx:
