@@ -21,8 +21,10 @@ class LoopEngine:
     async def run(self, agent: AgentAdapter, task: Task,
                   config: LoopConfig | None = None) -> LoopResult:
         config = config or LoopConfig()
-        if config.max_iterations < 1:
-            raise ValueError("max_iterations must be >= 1")
+        if not 1 <= config.max_iterations <= 20:
+            raise ValueError("max_iterations must be between 1 and the hard safety limit of 20")
+        if config.mode not in {"BASIC", "DETAIL", "FORCED_DETAIL", "MINIMAL"}:
+            raise ValueError("unsupported execution mode")
         if not task.objective.strip():
             raise ValueError("objective must not be empty")
 
