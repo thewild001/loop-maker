@@ -44,4 +44,4 @@ If an adapter is used with mandatory acceptance criteria, install one independen
 default = "my_evaluator:MyEvaluator"
 ```
 
-The evaluator implements async evaluate(task, result) and returns EvaluationResult with verified_criteria, failed_criteria, and evidence. The Core refuses convergence when mandatory criteria are present but no evaluator is installed, when the evaluator fails, or when evidence is empty. An evaluator must verify artifacts or deterministic checks independently; it must not merely repeat the agent's claim.
+The evaluator implements async evaluate(task, result) and returns EvaluationResult with verified_criteria, failed_criteria, and an evidence dictionary keyed by each verified criterion. The Core refuses convergence when mandatory criteria are present but no evaluator is installed, when the evaluator fails, or when evidence is empty. An evaluator must verify artifacts or deterministic checks independently; it must not merely repeat the agent's claim.
