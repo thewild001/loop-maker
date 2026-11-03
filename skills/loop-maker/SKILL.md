@@ -69,7 +69,7 @@ Choose BASIC unless the user requests another mode or the task's risk, ambiguity
 - loop-maker-orchestrator: detailed orchestration protocol.
 - loop-maker-diagnostics: diagnose and recover from a failure.
 - loop-maker-autoimprove: make a bounded improvement and validate regressions or quality.
-- loop-maker-stress-test: probe limits and failure modes without unsafe side effects.
+- loop-maker-stress-test: probe limits and failure modes without unsafe side effects.\n- loop-maker-evolution: capture meaningful reusable observations and inspect candidate patterns; it does not modify skills.
 
 ## Non-negotiable rules
 
