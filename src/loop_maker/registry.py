@@ -1,14 +1,16 @@
-"""Entry-point based adapter discovery."""
+"""Entry-point based discovery for trusted agent adapters and evaluators."""
 from __future__ import annotations
 from importlib.metadata import entry_points
 from typing import Any
 
+def _select(group: str):
+    points = entry_points()
+    return points.select(group=group) if hasattr(points, "select") else points.get(group, [])
+
 def discover_adapters() -> dict[str, Any]:
     """Load trusted third-party adapters registered in loop_maker.agents."""
-    points = entry_points()
-    selected = points.select(group="loop_maker.agents") if hasattr(points, "select") else points.get("loop_maker.agents", [])
     discovered = {}
-    for point in selected:
+    for point in _select("loop_maker.agents"):
         factory = point.load()
         adapter = factory()
         if not callable(getattr(adapter, "execute", None)):
@@ -21,3 +23,17 @@ def discover_adapters() -> dict[str, Any]:
             raise TypeError(f"Adapter '{point.name}' capabilities() must return a dictionary")
         discovered[point.name] = adapter
     return discovered
+
+def discover_evaluator() -> Any | None:
+    """Load the single default evaluator plugin, if one is installed."""
+    points = list(_select("loop_maker.evaluators"))
+    if not points:
+        return None
+    if len(points) > 1:
+        raise RuntimeError(
+            "Multiple evaluator plugins found; configure one default evaluator before startup"
+        )
+    evaluator = points[0].load()()
+    if not callable(getattr(evaluator, "evaluate", None)):
+        raise TypeError("Evaluator plugin must implement async evaluate(task, result)")
+    return evaluator
