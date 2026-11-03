@@ -86,6 +86,9 @@ class LoopEngine:
                 break
 
         if not converged and status == "MAX_ITERATIONS":
+            message = "Acceptance was not reached within the iteration budget"
+            errors.append({"code": "B", "message": message})
+            self.store.record_error(session_id, iteration, "B", message)
             status = "CIRCUIT_BROKEN"
         self.store.finish_session(session_id, status, converged, last_output)
         return LoopResult(session_id, status, converged, iteration, last_output,
