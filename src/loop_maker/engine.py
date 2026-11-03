@@ -9,6 +9,9 @@ from .contracts import (
 )
 from .storage import SessionStore
 
+class EvaluationFailure(RuntimeError):
+    """The evaluator is missing, invalid, or failed to provide a trustworthy result."""
+
 class LoopEngine:
     def __init__(self, store: SessionStore | None = None,
                  evaluator: Evaluator | None = None) -> None:
@@ -45,7 +48,10 @@ class LoopEngine:
                 if not isinstance(result, AgentResult):
                     raise TypeError("AgentAdapter.execute() must return AgentResult")
                 last_output = result.output or ""
-                evaluation = await self._evaluate(task, result, config)
+                evaluation = await asyncio.wait_for(
+                    self._evaluate(task, result, config),
+                    timeout=float(task.metadata.get("evaluation_timeout_seconds", 120)),
+                )
                 self.store.record_iteration(
                     session_id, iteration, last_output, evaluation["accepted"],
                     result.usage, {**result.metadata, "evaluation": evaluation},
@@ -58,6 +64,11 @@ class LoopEngine:
                     result.feedback or evaluation["reason"]
                     or "Improve the result against the original acceptance criteria."
                 )
+            except EvaluationFailure as exc:
+                errors.append({"code": "H", "message": str(exc)})
+                self.store.record_error(session_id, iteration, "H", str(exc))
+                status = "FAILED"
+                break
             except asyncio.TimeoutError:
                 errors.append({"code": "F", "message": "Agent execution timed out"})
                 self.store.record_error(session_id, iteration, "F", errors[-1]["message"])
@@ -86,14 +97,15 @@ class LoopEngine:
 
         if task.acceptance_criteria:
             if self.evaluator is None:
-                return {
-                    "accepted": False,
-                    "reason": "Mandatory criteria exist but no independent evaluator is configured",
-                    "verified_criteria": [],
-                    "failed_criteria": task.acceptance_criteria,
-                    "evidence": [],
-                }
-            evaluation: EvaluationResult = await self.evaluator.evaluate(task, result)
+                raise EvaluationFailure(
+                    "Mandatory criteria exist but no independent evaluator is configured"
+                )
+            try:
+                evaluation: EvaluationResult = await self.evaluator.evaluate(task, result)
+            except Exception as exc:
+                raise EvaluationFailure(f"Evaluator failed: {type(exc).__name__}: {exc}") from exc
+            if not isinstance(evaluation, EvaluationResult):
+                raise EvaluationFailure("Evaluator must return EvaluationResult")
             required = set(task.acceptance_criteria)
             verified = set(evaluation.verified_criteria)
             failed = set(evaluation.failed_criteria)
