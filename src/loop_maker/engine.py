@@ -1,14 +1,19 @@
-"""Bounded orchestration loop with injectable agent and persistence."""
+"""Bounded orchestration loop with injectable agent, evaluator and persistence."""
 from __future__ import annotations
 import asyncio
 import uuid
 from typing import Any
-from .contracts import AgentAdapter, AgentResult, LoopConfig, LoopResult, Task
+from .contracts import (
+    AgentAdapter, AgentResult, EvaluationResult, Evaluator,
+    LoopConfig, LoopResult, Task,
+)
 from .storage import SessionStore
 
 class LoopEngine:
-    def __init__(self, store: SessionStore | None = None) -> None:
+    def __init__(self, store: SessionStore | None = None,
+                 evaluator: Evaluator | None = None) -> None:
         self.store = store or SessionStore(":memory:")
+        self.evaluator = evaluator
 
     async def run(self, agent: AgentAdapter, task: Task,
                   config: LoopConfig | None = None) -> LoopResult:
@@ -40,15 +45,19 @@ class LoopEngine:
                 if not isinstance(result, AgentResult):
                     raise TypeError("AgentAdapter.execute() must return AgentResult")
                 last_output = result.output or ""
-                evaluation = self._evaluate(result, config)
-                self.store.record_iteration(session_id, iteration, last_output,
-                    evaluation["accepted"], result.usage, result.metadata)
+                evaluation = await self._evaluate(task, result, config)
+                self.store.record_iteration(
+                    session_id, iteration, last_output, evaluation["accepted"],
+                    result.usage, {**result.metadata, "evaluation": evaluation},
+                )
                 if evaluation["accepted"]:
                     status, converged = "COMPLETED", True
                     break
                 status = "MAX_ITERATIONS"
-                context["previous_feedback"] = (result.feedback or evaluation["reason"]
-                    or "Improve the result against the original acceptance criteria.")
+                context["previous_feedback"] = (
+                    result.feedback or evaluation["reason"]
+                    or "Improve the result against the original acceptance criteria."
+                )
             except asyncio.TimeoutError:
                 errors.append({"code": "F", "message": "Agent execution timed out"})
                 self.store.record_error(session_id, iteration, "F", errors[-1]["message"])
@@ -66,12 +75,38 @@ class LoopEngine:
         return LoopResult(session_id, status, converged, iteration, last_output,
                           errors, {"agent_id": agent.agent_id, "mode": config.mode})
 
-    @staticmethod
-    def _evaluate(result: AgentResult, config: LoopConfig) -> dict[str, Any]:
+    async def _evaluate(self, task: Task, result: AgentResult,
+                        config: LoopConfig) -> dict[str, Any]:
         if not result.success:
             return {"accepted": False, "reason": result.feedback or "Agent reported failure"}
         if not result.complete:
             return {"accepted": False, "reason": result.feedback or "Agent reports incomplete work"}
         if len(result.output.strip()) < config.min_output_chars:
             return {"accepted": False, "reason": "Output is empty or below minimum length"}
-        return {"accepted": True, "reason": None}
+
+        if task.acceptance_criteria:
+            if self.evaluator is None:
+                return {
+                    "accepted": False,
+                    "reason": "Mandatory criteria exist but no independent evaluator is configured",
+                    "verified_criteria": [],
+                    "failed_criteria": task.acceptance_criteria,
+                    "evidence": [],
+                }
+            evaluation: EvaluationResult = await self.evaluator.evaluate(task, result)
+            required = set(task.acceptance_criteria)
+            verified = set(evaluation.verified_criteria)
+            failed = set(evaluation.failed_criteria)
+            missing = sorted(required - verified)
+            accepted = not failed and not missing and bool(evaluation.evidence)
+            return {
+                "accepted": accepted,
+                "reason": evaluation.feedback or (
+                    "All mandatory criteria verified" if accepted
+                    else "Acceptance criteria lack complete independent evidence"
+                ),
+                "verified_criteria": evaluation.verified_criteria,
+                "failed_criteria": sorted(failed | set(missing)),
+                "evidence": evaluation.evidence,
+            }
+        return {"accepted": True, "reason": "No explicit acceptance criteria; basic result checks passed"}
