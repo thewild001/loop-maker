@@ -1,0 +1,64 @@
+# Instalación y experiencia de uso
+
+Loop Maker se utiliza desde el agente que ya empleas. No instala un agente nuevo ni cambia el proveedor de modelos. La instalación añade skills e instrucciones al proyecto; MCP es opcional y aporta persistencia de sesiones y herramientas compartidas.
+
+> Mientras esta implementación permanezca en revisión, utiliza la rama `feat/agent-agnostic-orchestrator`. Tras integrarse, cambia la referencia por `main`.
+
+## Linux / macOS
+
+Instalación desde la rama de desarrollo:
+
+```bash
+LOOP_MAKER_BRANCH=feat/agent-agnostic-orchestrator \
+  bash <(curl -fsSL https://raw.githubusercontent.com/thewild001/loop-maker/feat/agent-agnostic-orchestrator/bootstrap.sh)
+```
+
+Instalación en otra carpeta:
+
+```bash
+LOOP_MAKER_BRANCH=feat/agent-agnostic-orchestrator \
+  bash <(curl -fsSL https://raw.githubusercontent.com/thewild001/loop-maker/feat/agent-agnostic-orchestrator/bootstrap.sh) \
+  --target /ruta/al/proyecto
+```
+
+Desde un checkout:
+
+```bash
+bash scripts/install-skills.sh --target /ruta/al/proyecto
+```
+
+## Windows PowerShell
+
+Descarga y ejecuta el script:
+
+```powershell
+Invoke-WebRequest "https://raw.githubusercontent.com/thewild001/loop-maker/feat/agent-agnostic-orchestrator/bootstrap.ps1" -OutFile ".\\loop-maker-bootstrap.ps1"
+.\\loop-maker-bootstrap.ps1
+```
+
+Para especificar destino o rama:
+
+```powershell
+.\\loop-maker-bootstrap.ps1 -Target "C:\\ruta\\al\\proyecto" -Branch "feat/agent-agnostic-orchestrator"
+```
+
+## Uso desde el agente
+
+Abre el proyecto en un host compatible e invoca:
+- `/loop-maker`: ciclo principal multipropósito.
+- `/loop-maker-diagnostics`: diagnóstico y recuperación.
+- `/loop-maker-autoimprove`: mejora controlada.
+- `/loop-maker-stress-test`: pruebas de límites y escenarios adversos.
+
+La skill principal adapta los criterios de evaluación al dominio: investigación, análisis, redacción, planificación, software, datos, operaciones o trabajo creativo. Sin MCP funciona en modo in-agent, pero no dispone de persistencia propia de sesiones.
+
+## MCP opcional
+
+Consulta [MCP por host](../integrations/mcp/README.md). Durante esta fase, instala el extra MCP desde un checkout local; no presupongas que el paquete ya está publicado en PyPI.
+
+## Seguridad
+
+- Los archivos existentes se preservan por defecto.
+- `--force` / `-Force` permite reemplazar los archivos instalados por Loop Maker.
+- El instalador no edita la configuración MCP del host.
+- Revisa los cambios antes de utilizarlo en repositorios o espacios de trabajo sensibles.

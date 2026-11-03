@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+loop-maker.sqlite3
+loop-maker.sqlite3-shm
+loop-maker.sqlite3-wal
+.env
