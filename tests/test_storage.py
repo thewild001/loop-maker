@@ -1,5 +1,6 @@
 from loop_maker.storage import SessionStore
 
+
 def test_memory_store_keeps_session_and_iteration_history():
     store = SessionStore(":memory:")
     store.start_session("s-1", "agent-x", "objective", "BASIC")
