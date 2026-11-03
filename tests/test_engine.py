@@ -74,9 +74,18 @@ def test_rejects_zero_iteration_budget():
 async def test_cancelled_execution_is_persisted_as_terminal_state():
     from loop_maker.storage import SessionStore
     store = SessionStore(":memory:")
+    class BlockingAgent:
+        agent_id = "blocking-agent"
+
+        def capabilities(self):
+            return {"execute": True}
+
+        async def execute(self, task, context):
+            await asyncio.Event().wait()
+
     engine = LoopEngine(store)
     running = asyncio.create_task(engine.run(
-        NeverCompletesAgent(), Task("cancel me"),
+        BlockingAgent(), Task("cancel me"),
         LoopConfig(session_id="cancel-session", max_iterations=5),
     ))
     await asyncio.sleep(0)
