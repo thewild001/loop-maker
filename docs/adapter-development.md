@@ -34,3 +34,14 @@ my-agent = "my_adapter:MyAdapter"
 ```
 
 El entry point ejecuta código Python. Instala únicamente paquetes de confianza. Ejecuta las pruebas de contrato y valida timeout, cancelación, artefactos y permisos antes de producción.
+
+## Evaluator plugins
+
+If an adapter is used with mandatory acceptance criteria, install one independent evaluator plugin. Register exactly one default evaluator in the loop_maker.evaluators entry-point group:
+
+```toml
+[project.entry-points."loop_maker.evaluators"]
+default = "my_evaluator:MyEvaluator"
+```
+
+The evaluator implements async evaluate(task, result) and returns EvaluationResult with verified_criteria, failed_criteria, and evidence. The Core refuses convergence when mandatory criteria are present but no evaluator is installed, when the evaluator fails, or when evidence is empty. An evaluator must verify artifacts or deterministic checks independently; it must not merely repeat the agent's claim.
