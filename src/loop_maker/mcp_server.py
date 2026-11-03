@@ -40,6 +40,8 @@ async def loop_run(objective: str, agent_id: str = "demo",
         return {"error": "unknown_agent", "available_agents": sorted(agents)}
     if mode not in VALID_MODES:
         return {"error": "invalid_mode", "valid_modes": sorted(VALID_MODES)}
+    if not 1 <= max_iterations <= 20:
+        return {"error": "max_iterations_must_be_between_1_and_20"}
     result = await engine.run(
         agents[agent_id],
         Task(objective=objective, acceptance_criteria=acceptance_criteria or [],
@@ -89,9 +91,14 @@ def loop_session_finish(session_id: str, status: str, converged: bool,
     """Close a host-managed session and persist its final outcome."""
     if status not in VALID_STATUSES:
         return {"error": "invalid_status", "valid_statuses": sorted(VALID_STATUSES)}
+    if converged != (status == "COMPLETED"):
+        return {"error": "converged_must_match_completed_status"}
     if store.get_session(session_id) is None:
         return {"error": "session_not_found"}
-    store.finish_session(session_id, status, converged, final_output)
+    try:
+        store.finish_session(session_id, status, converged, final_output)
+    except ValueError as exc:
+        return {"error": str(exc)}
     return {"finished": True, "session_id": session_id, "status": status}
 
 @mcp.tool()
