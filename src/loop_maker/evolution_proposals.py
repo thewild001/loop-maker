@@ -7,6 +7,7 @@ It intentionally does not publish or install changes.
 from __future__ import annotations
 
 import difflib
+from contextlib import contextmanager
 import hashlib
 import json
 import re
@@ -33,7 +34,7 @@ class SkillProposalStore:
         if self.database != ":memory:":
             Path(self.database).expanduser().resolve().parent.mkdir(parents=True, exist_ok=True)
         self._memory = sqlite3.connect(":memory:") if self.database == ":memory:" else None
-        with self._connect() as db:
+        with self._connection() as db:
             db.execute("""CREATE TABLE IF NOT EXISTS skill_proposals (
                 id TEXT PRIMARY KEY, skill_path TEXT NOT NULL, rationale TEXT NOT NULL,
                 observation_ids_json TEXT NOT NULL, original_content TEXT NOT NULL,
@@ -48,6 +49,16 @@ class SkillProposalStore:
         db.row_factory = sqlite3.Row
         db.execute("PRAGMA busy_timeout = 10000")
         return db
+
+    @contextmanager
+    def _connection(self):
+        db = self._connect()
+        try:
+            with db:
+                yield db
+        finally:
+            if db is not self._memory:
+                db.close()
 
     def _safe_skill_file(self, relative_path: str) -> Path:
         candidate = Path(relative_path)
@@ -87,7 +98,7 @@ class SkillProposalStore:
             "original_sha256": hashlib.sha256(original.encode("utf-8")).hexdigest(),
             "status": "proposed", "created_at": now, "updated_at": now,
         }
-        with self._connect() as db:
+        with self._connection() as db:
             db.execute("""INSERT INTO skill_proposals
                 (id, skill_path, rationale, observation_ids_json, original_content,
                  proposed_content, original_sha256, status, created_at, updated_at)
@@ -97,7 +108,7 @@ class SkillProposalStore:
         return record
 
     def _get_row(self, proposal_id: str) -> sqlite3.Row:
-        with self._connect() as db:
+        with self._connection() as db:
             row = db.execute("SELECT * FROM skill_proposals WHERE id=?", (proposal_id,)).fetchone()
         if row is None:
             raise ValueError("proposal_not_found")
@@ -120,7 +131,7 @@ class SkillProposalStore:
             raise ValueError("limit must be between 1 and 200")
         if status and status not in {"proposed", "staged", "validated", "approved", "rejected"}:
             raise ValueError("invalid proposal status")
-        with self._connect() as db:
+        with self._connection() as db:
             if status:
                 rows = db.execute("SELECT * FROM skill_proposals WHERE status=? ORDER BY created_at DESC LIMIT ?",
                                   (status, limit)).fetchall()
@@ -144,7 +155,7 @@ class SkillProposalStore:
         target = target_dir / Path(row["skill_path"]).name
         target_dir.mkdir(parents=True, exist_ok=False)
         target.write_text(row["proposed_content"], encoding="utf-8")
-        with self._connect() as db:
+        with self._connection() as db:
             db.execute("UPDATE skill_proposals SET status='staged', staged_path=?, updated_at=? WHERE id=?",
                        (str(target), _now(), proposal_id))
         return {"proposal_id": proposal_id, "status": "staged", "staged_path": str(target)}
@@ -179,7 +190,7 @@ class SkillProposalStore:
         result = {"valid": valid, "checks": checks,
                   "note": "Structural checks only; no skill execution or semantic quality guarantee."}
         status = "validated" if valid and row["status"] in {"staged", "validated"} else row["status"]
-        with self._connect() as db:
+        with self._connection() as db:
             db.execute("UPDATE skill_proposals SET status=?, validation_json=?, updated_at=? WHERE id=?",
                        (status, json.dumps(result), _now(), proposal_id))
         return {"proposal_id": proposal_id, **result, "status": status}
@@ -189,7 +200,7 @@ class SkillProposalStore:
         if row["status"] != "validated":
             raise ValueError("proposal must pass validation before human approval")
         status = "approved" if approved else "rejected"
-        with self._connect() as db:
+        with self._connection() as db:
             db.execute("UPDATE skill_proposals SET status=?, updated_at=? WHERE id=?",
                        (status, _now(), proposal_id))
         return {"proposal_id": proposal_id, "status": status,
