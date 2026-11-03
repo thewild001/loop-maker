@@ -11,7 +11,13 @@ def discover_adapters() -> dict[str, Any]:
     for point in selected:
         factory = point.load()
         adapter = factory()
-        if not hasattr(adapter, "execute") or not hasattr(adapter, "capabilities"):
-            raise TypeError(f"Adapter '{point.name}' does not implement the Loop Maker contract")
+        if not callable(getattr(adapter, "execute", None)):
+            raise TypeError(f"Adapter '{point.name}' must implement async execute(task, context)")
+        if not callable(getattr(adapter, "capabilities", None)):
+            raise TypeError(f"Adapter '{point.name}' must implement capabilities()")
+        if not isinstance(getattr(adapter, "agent_id", None), str) or not adapter.agent_id.strip():
+            raise TypeError(f"Adapter '{point.name}' must expose a non-empty agent_id")
+        if not isinstance(adapter.capabilities(), dict):
+            raise TypeError(f"Adapter '{point.name}' capabilities() must return a dictionary")
         discovered[point.name] = adapter
     return discovered
