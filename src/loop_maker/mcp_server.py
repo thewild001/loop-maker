@@ -166,6 +166,15 @@ def loop_observation_groups(min_occurrences: int = 2, limit: int = 50) -> list[d
         return {"error": str(exc)}
 
 
+@mcp.tool()
+def loop_evolution_review(min_sessions: int = 2, limit: int = 50) -> dict:
+    """Review observations for recurring evidence-backed candidates and mixed signals."""
+    try:
+        return evolution_store.review_patterns(min_sessions=min_sessions, limit=limit)
+    except ValueError as exc:
+        return {"error": str(exc)}
+
+
 @mcp.resource("loop-maker://agents")
 def agents_catalog() -> str:
     """Current registered agent adapters and capabilities."""
