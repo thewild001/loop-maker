@@ -211,6 +211,7 @@ class DiscoveryError:
 class ProviderDiscoveryResult:
     provider_id: str
     capabilities: tuple[CapabilityDescriptor, ...] = ()
+    assessments: tuple[CapabilityAssessment, ...] = ()
     status: ProviderStatus = ProviderStatus.SUCCESS
     complete: bool = True
     errors: tuple[DiscoveryError, ...] = ()
@@ -231,6 +232,14 @@ class ProviderDiscoveryResult:
             raise ValueError("a successful provider result must be complete and contain no errors")
         if any(item.source.provider_id != self.provider_id for item in self.capabilities):
             raise ValueError("all capabilities must identify the result provider as their source")
+        capability_map = {item.id: item for item in self.capabilities}
+        for assessment in self.assessments:
+            capability = capability_map.get(assessment.capability_id)
+            if capability is None:
+                raise ValueError("provider assessment references an unknown capability")
+            if (assessment.operation_id is not None
+                    and assessment.operation_id not in {op.id for op in capability.operations}):
+                raise ValueError("provider assessment references an unknown operation")
 
 
 @dataclass(frozen=True, slots=True)
