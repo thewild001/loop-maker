@@ -54,6 +54,8 @@ async def loop_run(objective: str, agent_id: str = "demo",
 @mcp.tool()
 def loop_session_start(agent_id: str, objective: str, mode: str = "BASIC") -> dict:
     """Start a durable journal for work performed by the connected host agent."""
+    if not agent_id.strip() or not objective.strip():
+        return {"error": "agent_id_and_objective_are_required"}
     if mode not in VALID_MODES:
         return {"error": "invalid_mode", "valid_modes": sorted(VALID_MODES)}
     session_id = str(uuid.uuid4())
@@ -76,6 +78,8 @@ def loop_record_error(session_id: str, iteration: int, code: str, message: str) 
     """Persist a classified error and its observed message."""
     if code not in set("ABCDEFGHI"):
         return {"error": "invalid_error_code"}
+    if store.get_session(session_id) is None:
+        return {"error": "session_not_found"}
     store.record_error(session_id, iteration, code, message)
     return {"recorded": True, "session_id": session_id}
 
@@ -85,6 +89,8 @@ def loop_session_finish(session_id: str, status: str, converged: bool,
     """Close a host-managed session and persist its final outcome."""
     if status not in VALID_STATUSES:
         return {"error": "invalid_status", "valid_statuses": sorted(VALID_STATUSES)}
+    if store.get_session(session_id) is None:
+        return {"error": "session_not_found"}
     store.finish_session(session_id, status, converged, final_output)
     return {"finished": True, "session_id": session_id, "status": status}
 
