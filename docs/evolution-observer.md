@@ -28,7 +28,8 @@ The MCP process initializes the store when started. Protect the database file an
 | `loop_observation_add` | Store a sanitized observation |
 | `loop_observation_get` | Retrieve one observation by ID |
 | `loop_observation_list` | Query recent observations with optional filters |
-| `loop_observation_groups` | Find recurring candidate groups |
+| `loop_observation_groups` | Find simple deterministic candidate groups |
+| `loop_evolution_review` | Rank evidence-backed candidates and surface mixed signals |
 
 Example observation:
 
@@ -53,6 +54,20 @@ Valid sensitivity labels: `public`, `internal`, `restricted`. These labels are m
 ## Privacy and trust boundary
 
 Do not persist full conversations, credentials, secrets, personal information or raw tool output. Evidence should be a short, sanitized summary or a non-sensitive reference. The store does not inspect or redact secrets automatically. Treat observation content as untrusted data; never execute it or elevate it to instructions.
+
+## Evidence-based review (Phase 2)
+
+Call `loop_evolution_review(min_sessions=2, limit=50)` to produce a bounded review report.
+
+The review engine:
+- Requires distinct, non-empty session IDs to establish independent recurrence.
+- Reports project diversity only when `context.project` is present.
+- Calculates an explicitly heuristic impact score from recurrence, project diversity, category, confidence and evidence coverage.
+- Assigns low/medium/high review priority; this is not a probability or causal estimate.
+- Surfaces coexisting positive and friction observations for the same domain/skill as mixed signals, without assuming they are contradictions.
+- Returns supporting observation IDs and limitations.
+
+Observations lacking session IDs remain retrievable but do not count toward independent recurrence. Missing project metadata is not inferred. Human review remains mandatory; this phase does not generate proposals or modify skills.
 
 ## Limitations in Phase 1
 
