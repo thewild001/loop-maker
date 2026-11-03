@@ -11,4 +11,4 @@ The initial perspective catalog and routing concepts in Loop Maker Advisory are 
 
 Loop Maker Advisory does not vendor the upstream dispatcher or its generated advisor skill files. The catalog in `ADVISORS.md` is an independently written, concise adaptation of the publicly described framework categories and routing concepts. The upstream license and disclaimer are retained here for provenance and attribution.
 
-Upstream project metadata and source were reviewed on 2026-11-03. Pin a specific upstream commit before any future substantial code or profile reuse; do not silently track mutable upstream content.
+Upstream source snapshot reviewed: [91d7d204b8f6e50dad83e15d05d3d3a7c1558816](https://github.com/wolfqing/QadvisorSkills/commit/91d7d204b8f6e50dad83e15d05d3d3a7c1558816), reviewed on 2026-11-03. Future substantial reuse must be reviewed against a pinned commit; do not silently track mutable upstream content.
