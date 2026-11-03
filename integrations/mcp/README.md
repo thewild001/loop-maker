@@ -1,22 +1,24 @@
 # Configuración MCP por host
 
-El servidor Loop Maker utiliza MCP Python SDK v2 y transporte stdio por defecto. El comando es:
+El servidor Loop Maker utiliza MCP Python SDK v2 y transporte stdio por defecto. La interfaz expone tools, un resource y un prompt.
+
+## Desarrollo local
+
+Desde un checkout del repositorio:
 
 ```bash
-uvx --from "loop-maker-orchestrator[mcp]" loop-maker-mcp
-```
-
-Para desarrollo local desde el repositorio:
-
-```bash
+python -m venv .venv
+source .venv/bin/activate
 pip install -e ".[mcp]"
 loop-maker-mcp
 ```
 
+Configura el host para ejecutar el binario loop-maker-mcp del entorno virtual del checkout. En Windows, el ejecutable suele estar en .venv/Scripts/loop-maker-mcp.exe.
+
 ## Claude Code
 
 ```bash
-claude mcp add --transport stdio loop-maker -- uvx --from "loop-maker-orchestrator[mcp]" loop-maker-mcp
+claude mcp add --transport stdio loop-maker -- /ruta/absoluta/loop-maker/.venv/bin/loop-maker-mcp
 ```
 
 ## Codex
@@ -25,8 +27,8 @@ Añade a ~/.codex/config.toml:
 
 ```toml
 [mcp_servers.loop-maker]
-command = "uvx"
-args = ["--from", "loop-maker-orchestrator[mcp]", "loop-maker-mcp"]
+command = "/ruta/absoluta/loop-maker/.venv/bin/loop-maker-mcp"
+args = []
 ```
 
 ## Cursor
@@ -37,8 +39,8 @@ Añade a la configuración MCP del proyecto:
 {
   "mcpServers": {
     "loop-maker": {
-      "command": "uvx",
-      "args": ["--from", "loop-maker-orchestrator[mcp]", "loop-maker-mcp"]
+      "command": "/ruta/absoluta/loop-maker/.venv/bin/loop-maker-mcp",
+      "args": []
     }
   }
 }
@@ -46,12 +48,22 @@ Añade a la configuración MCP del proyecto:
 
 ## OpenCode
 
-La estructura de configuración MCP puede variar según la versión. Consulta la documentación del host y configura un servidor local que ejecute el comando uvx anterior. La receta de skills y perfil de agente está en ../opencode/README.md.
+Configura un servidor MCP local que invoque el ejecutable loop-maker-mcp del entorno virtual. La forma exacta del bloque mcp puede variar por versión; consulta la documentación de OpenCode antes de copiar una configuración entre versiones.
 
-## Notas
+## Cuando el paquete se publique
 
-- Para una instalación publicada, el paquete debe existir en el índice Python configurado.
-- Mientras se desarrolla desde GitHub, instala el paquete desde el checkout editable.
+Una vez que loop-maker-orchestrator esté publicado en el índice Python configurado, puede utilizarse uvx:
+
+```bash
+uvx --from "loop-maker-orchestrator[mcp]" loop-maker-mcp
+```
+
+Ese comando es una ruta de distribución futura; no presupone que el paquete ya esté publicado.
+
+## Notas operativas
+
 - Configura LOOP_MAKER_DB para elegir el archivo SQLite.
-- No escribas logs ni mensajes de diagnóstico en stdout del proceso stdio; utiliza stderr.
-- El SDK oficial documenta stdio y Streamable HTTP. Para despliegues remotos, usa Streamable HTTP con autenticación y protección de transporte.
+- No escribas logs ni diagnósticos en stdout del proceso stdio; utiliza stderr.
+- Protege el directorio de la base de datos y los permisos del proceso.
+- No expongas un servidor remoto sin autenticación y controles de transporte.
+- El SDK oficial documenta stdio y Streamable HTTP; para despliegues remotos usa Streamable HTTP con autenticación y protección de transporte.
