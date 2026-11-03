@@ -174,6 +174,7 @@ Abre el proyecto instalado en tu agente y solicita el flujo adecuado:
 /loop-maker-diagnostics
 /loop-maker-autoimprove
 /loop-maker-stress-test
+/loop-maker-advisory "Contrasta estas alternativas antes de decidir"
 ```
 
 Las skills disponibles son:
@@ -185,6 +186,7 @@ Las skills disponibles son:
 | `loop-maker-diagnostics` | Diagnóstico de fallos, estancamiento y falta de evidencia |
 | `loop-maker-autoimprove` | Mejora iterativa de artefactos y procesos |
 | `loop-maker-stress-test` | Diseño de pruebas de límites y escenarios adversos |
+| `loop-maker-advisory` | Deliberación opcional para decisiones complejas y de alto impacto |
 
 La skill principal selecciona un nivel de rigor adecuado al trabajo:
 
