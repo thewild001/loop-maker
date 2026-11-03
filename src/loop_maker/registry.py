@@ -1,5 +1,6 @@
 """Entry-point based discovery for trusted agent adapters and evaluators."""
 from __future__ import annotations
+
 from importlib.metadata import entry_points
 from typing import Any
 
