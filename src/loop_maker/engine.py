@@ -112,7 +112,10 @@ class LoopEngine:
             verified = set(evaluation.verified_criteria)
             failed = set(evaluation.failed_criteria)
             missing = sorted(required - verified)
-            accepted = not failed and not missing and bool(evaluation.evidence)
+            evidence_criteria = set(evaluation.evidence)
+            accepted = not failed and not missing and not (required - evidence_criteria) and all(
+                value.strip() for value in evaluation.evidence.values()
+            )
             return {
                 "accepted": accepted,
                 "reason": evaluation.feedback or (
