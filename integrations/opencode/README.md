@@ -1,17 +1,13 @@
 # Integración con OpenCode
 
-Copia las skills canónicas y el perfil del orquestador:
+Instala las skills canónicas y el perfil del orquestador:
 
 ```bash
-mkdir -p .opencode/skills .opencode/agents
-cp -R skills/* .opencode/skills/
-cp agents/loop-maker-orchestrator.md .opencode/agents/loop-maker-orchestrator.md
+bash scripts/install-skills.sh /ruta/al/proyecto
 ```
 
-Registra el servidor MCP en la configuración OpenCode del proyecto usando el formato local/stdio soportado por tu versión. Comando de referencia:
+Para conectar MCP durante el desarrollo, instala el checkout Loop Maker en un entorno virtual y configura el servidor local usando el ejecutable loop-maker-mcp. Consulta ../mcp/README.md para ejemplos y rutas.
 
-```bash
-uvx --from "loop-maker-orchestrator[mcp]" loop-maker-mcp
-```
+Cuando el paquete esté publicado en el índice Python, podrá utilizarse uvx con el extra mcp.
 
-La skill contiene la política de workflow; MCP expone operaciones. No dupliques la lógica de orquestación en prompts específicos del host.
+La skill contiene la política del workflow; MCP expone operaciones y persistencia. No dupliques la lógica del orquestador en prompts específicos del host.
