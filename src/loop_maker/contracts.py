@@ -4,12 +4,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
+
 @dataclass(slots=True)
 class Task:
     objective: str
     acceptance_criteria: list[str] = field(default_factory=list)
     constraints: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
+    domain: str = "general"
+
 
 @dataclass(slots=True)
 class AgentResult:
@@ -22,13 +25,16 @@ class AgentResult:
     usage: dict[str, Any] = field(default_factory=dict)
     metadata: dict[str, Any] = field(default_factory=dict)
 
+
 @dataclass(slots=True)
 class EvaluationResult:
-    """Evidence-backed evaluation of mandatory acceptance criteria."""
+    """Domain-aware evaluation, backed by evidence."""
     verified_criteria: list[str] = field(default_factory=list)
     failed_criteria: list[str] = field(default_factory=list)
     evidence: dict[str, str] = field(default_factory=dict)
     feedback: str | None = None
+    accepted: bool | None = None
+
 
 @dataclass(slots=True)
 class LoopConfig:
@@ -36,6 +42,7 @@ class LoopConfig:
     mode: str = "BASIC"
     min_output_chars: int = 1
     session_id: str | None = None
+
 
 @dataclass(slots=True)
 class LoopResult:
@@ -47,6 +54,7 @@ class LoopResult:
     errors: list[dict[str, str]] = field(default_factory=list)
     metrics: dict[str, Any] = field(default_factory=dict)
 
+
 class AgentAdapter(Protocol):
     @property
     def agent_id(self) -> str: ...
@@ -57,7 +65,8 @@ class AgentAdapter(Protocol):
         """Describe optional features; never claim unsupported capabilities."""
         ...
 
+
 class Evaluator(Protocol):
     async def evaluate(self, task: Task, result: AgentResult) -> EvaluationResult:
-        """Verify criteria and return evidence; do not rely on agent confidence."""
+        """Apply domain-specific checks and return evidence, not agent confidence."""
         ...
