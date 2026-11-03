@@ -20,7 +20,10 @@ loop-maker = "loop_maker.cli:main"
 loop-maker-mcp = "loop_maker.mcp_server:main"
 
 [project.entry-points."loop_maker.agents"]
-# Third-party adapters register here.
+# Third-party agent adapters register here.
+
+[project.entry-points."loop_maker.evaluators"]
+# One default evidence-backed evaluator may be registered here.
 
 [tool.setuptools.packages.find]
 where = ["src"]
