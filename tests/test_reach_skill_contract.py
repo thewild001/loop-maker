@@ -106,4 +106,4 @@ def test_malformed_cli_output_is_not_treated_as_success(stdout: str) -> None:
 
 def test_unknown_error_codes_are_documented_as_failures() -> None:
     assert "Unknown error: preserve the error details" in SKILL
-    assert "Unknown error codes" in SKILL
+    assert "Treat unknown codes as failures" in SKILL
