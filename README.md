@@ -1,26 +1,133 @@
-# Loop Maker Orchestrator
+# Loop Maker
 
-> Orquestación multipropósito de ciclos de trabajo para agentes de IA: investigar, analizar, escribir, planificar, programar, procesar datos, operar herramientas y crear.
+> **Orquestación multipropósito para agentes de IA.** Convierte una tarea abierta en un ciclo controlado de ejecución, evaluación basada en evidencia, corrección y convergencia.
 
-**Estado:** MVP en desarrollo · **Versión:** 0.1.0 · **Python:** 3.11+
+[![CI](https://github.com/thewild001/loop-maker/actions/workflows/ci.yml/badge.svg)](https://github.com/thewild001/loop-maker/actions)
+![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-## Propósito
+Loop Maker es una capa de orquestación que se utiliza **desde el agente de IA que ya empleas**. No es otro agente, no sustituye al modelo ni impone un runtime. Su función es aportar estructura, límites, criterios de aceptación y trazabilidad al trabajo realizado por agentes.
 
-Loop Maker no es un framework exclusivamente de programación ni un agente que sustituye a otros. Es una capa de orquestación que se utiliza desde el agente que el usuario ya emplea, de forma similar a la experiencia de MentorKit, pero con otro propósito: convertir tareas abiertas en ciclos acotados de ejecución, evaluación, corrección y convergencia.
+No está limitado al desarrollo de software. Puede aplicarse a investigación, análisis, redacción, planificación, programación, datos, operaciones, aprendizaje y producción creativa. El ciclo es común; la forma de evaluar cambia según el trabajo.
 
-Se aplica a investigación, análisis, redacción, planificación, desarrollo de software, datos, operaciones, aprendizaje y producción creativa. El método es común; los criterios de evaluación cambian según el dominio.
+> **Estado del proyecto:** MVP en desarrollo · versión 0.1.0. La integración mediante skills y el servidor MCP tienen una implementación inicial. Los adapters delegables de terceros y la validación real de cada host siguen siendo responsabilidad de la integración y están en evolución.
 
-## Experiencia de uso
+---
 
-Instala las skills en el proyecto y abre ese proyecto con tu agente habitual.
+## ¿Qué resuelve?
+
+Los agentes pueden producir resultados útiles, pero los trabajos complejos suelen necesitar algo más que una única respuesta: objetivos explícitos, criterios verificables, iteraciones limitadas, recuperación ante fallos y una condición clara de finalización.
+
+Loop Maker organiza ese proceso:
+
+```text
+Objetivo
+   |
+   v
+Definir alcance y criterios
+   |
+   v
+Ejecutar una unidad de trabajo
+   |
+   v
+Evaluar el resultado y sus evidencias
+   |
+   +---- Criterios incumplidos ----> Diagnosticar y corregir
+   |                                      |
+   +--------------------------------------+
+   |
+   v
+Convergencia o parada controlada
+   |
+   v
+Resultado + evidencias + trazabilidad
+```
+
+El sistema evita iteraciones indefinidas: trabaja con presupuestos de ejecución y se detiene cuando se cumplen los criterios, se agotan los límites o aparece una condición que requiere intervención.
+
+## Principios de diseño
+
+- **Agent-agnostic:** el host conserva su modelo, herramientas, conectores, memoria, runtime y permisos.
+- **Multipropósito:** no presupone que el objetivo sea código ni que exista un único tipo de artefacto.
+- **Evaluación especializada:** cada dominio utiliza criterios y métodos adecuados; no hay una rúbrica universal.
+- **Evidence-driven:** un criterio obligatorio no se considera satisfecho sin evidencia suficiente.
+- **Bounded execution:** las iteraciones y los tiempos tienen límites.
+- **Extensible:** agentes y evaluadores pueden incorporarse mediante plugins Python.
+- **Human-controlled:** Loop Maker no amplía los permisos del host ni autoriza por sí mismo acciones externas.
+
+## Arquitectura
+
+```text
+                 Usuario
+                    |
+             Agente host actual
+       (Codex / Claude Code / OpenCode /
+              Cursor / otros)
+                    |
+          Skills e instrucciones
+                    |
+        +-----------+-----------+
+        |                       |
+     In-agent              MCP opcional
+  El host ejecuta       Tools, resource,
+  el trabajo             prompt y journal
+        |                       |
+        +-----------+-----------+
+                    |
+             Loop Maker Core
+       contratos · límites · lifecycle
+       evaluación · recuperación
+       convergencia · persistencia
+                    |
+          +---------+---------+
+          |                   |
+     Agent adapters      Evaluator plugins
+          |                   |
+    Agentes externos     Validación por dominio
+```
+
+### Dos formas de utilizarlo
+
+**1. In-agent (flujo principal de las skills)**
+
+El agente host realiza el trabajo con sus capacidades nativas. Las skills de Loop Maker le indican cómo definir criterios, ejecutar ciclos acotados, evaluar evidencias y reportar el resultado. MCP puede añadirse para registrar sesiones e iteraciones.
+
+**2. Delegated (Core + adapter)**
+
+El Core ejecuta tareas a través de un adapter que implementa el contrato `AgentAdapter`. Los adapters se descubren mediante entry points de Python. El repositorio incluye un adapter `demo` para probar el contrato; **no es un agente LLM ni una integración de producción**. Para delegar trabajo real hay que instalar un adapter compatible.
+
+MCP no convierte por sí solo al host en un adapter ni ejecuta automáticamente sus tareas: expone operaciones que el agente puede utilizar.
+
+## Dominios y evaluación
+
+Los criterios se definen según el resultado esperado. Algunos ejemplos:
+
+| Dominio | Qué se puede evaluar |
+|---|---|
+| Investigación | Autoridad y actualidad de fuentes, corroboración, cobertura y trazabilidad |
+| Análisis | Supuestos, método, cálculos, alternativas y reproducibilidad |
+| Redacción | Precisión, audiencia, integridad, estructura, tono y formato |
+| Planificación | Viabilidad, dependencias, riesgos, secuencia y resultados medibles |
+| Software / DevOps | Comportamiento, pruebas, seguridad, compatibilidad y mantenibilidad |
+| Datos / BI | Procedencia, calidad, transformaciones, validez y reproducibilidad |
+| Operaciones | Autorización, reversibilidad, impacto y auditoría |
+| Aprendizaje y creatividad | Adecuación al objetivo, coherencia, restricciones y feedback |
+
+El Core proporciona el ciclo y los contratos; los evaluadores aportan la validación específica. Si una tarea incluye criterios obligatorios, el Core requiere un evaluador independiente que los verifique con evidencia. No se debe confundir la afirmación del agente con una verificación independiente.
+
+## Instalación rápida: skills
+
+La forma más sencilla de comenzar es instalar las skills en el proyecto donde trabajas. No necesitas instalar el motor Python ni configurar MCP para utilizar el flujo in-agent.
 
 ### Linux / macOS
+
+Desde la raíz del proyecto:
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/thewild001/loop-maker/main/bootstrap.sh)
 ```
 
-Para instalar en otra carpeta:
+Para instalar en otro directorio:
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/thewild001/loop-maker/main/bootstrap.sh) --target /ruta/al/proyecto
@@ -32,114 +139,167 @@ bash <(curl -fsSL https://raw.githubusercontent.com/thewild001/loop-maker/main/b
 irm https://raw.githubusercontent.com/thewild001/loop-maker/main/bootstrap.ps1 | iex
 ```
 
-Para especificar destino, descarga el script y ejecútalo:
+Para elegir el destino, descarga el script y ejecútalo:
 
 ```powershell
-Invoke-WebRequest https://raw.githubusercontent.com/thewild001/loop-maker/main/bootstrap.ps1 -OutFile .\loop-maker-bootstrap.ps1
+Invoke-WebRequest "https://raw.githubusercontent.com/thewild001/loop-maker/main/bootstrap.ps1" -OutFile ".\loop-maker-bootstrap.ps1"
 .\loop-maker-bootstrap.ps1 -Target "C:\ruta\al\proyecto"
 ```
 
-Los archivos existentes se preservan por defecto; `--force` / `-Force` permite reemplazar archivos administrados por Loop Maker.
+Los instaladores preservan los archivos existentes por defecto. Usa `--force` en Bash o `-Force` en PowerShell para reemplazarlos explícitamente.
 
-Después invoca la skill desde un host compatible:
+### ¿Dónde se instalan las skills?
+
+| Host / formato | Ubicación |
+|---|---|
+| Agent Skills (por ejemplo, Codex) | `.agents/skills/` |
+| Claude Code | `.claude/skills/` |
+| OpenCode | `.opencode/skills/` |
+| Cursor | `.cursor/rules/` |
+| GitHub Copilot | `.github/instructions/` |
+
+El instalador también incorpora la instrucción de orquestación de OpenCode. Estas ubicaciones describen los artefactos que instala el proyecto; no constituyen por sí solas una certificación de compatibilidad para todas las versiones de cada host.
+
+## Uso desde el agente
+
+Abre el proyecto instalado en tu agente y solicita el flujo adecuado:
 
 ```text
 /loop-maker "Investiga y compara tres enfoques para este problema"
+/loop-maker "Analiza estas alternativas y justifica una recomendación"
 /loop-maker "Prepara un plan de migración con riesgos y dependencias"
-/loop-maker "Analiza estos datos y valida las conclusiones"
-/loop-maker "Refactoriza este módulo y verifica que no haya regresiones"
+/loop-maker "Mejora este documento y valida que cumpla el brief"
+/loop-maker "Refactoriza este módulo y verifica las regresiones"
+
 /loop-maker-diagnostics
 /loop-maker-autoimprove
 /loop-maker-stress-test
 ```
 
-La instalación habilita el modo in-agent. El servidor MCP es opcional y aporta herramientas comunes e historial persistente.
+Las skills disponibles son:
 
-## Cómo funciona
-
-```text
-Usuario
-  |
-Agente host (Codex / Claude Code / OpenCode / Cursor / ...)
-  | skills                   | MCP opcional
-  +-------------+-------------+
-                |
-         LOOP MAKER CORE
-    objetivo · criterios · ciclos
-    evaluación · recuperación
-    convergencia · journal
-                |
-      Agent adapters / plugins
-                |
-       runtimes y herramientas
-```
-
-- **In-agent:** el host ejecuta la tarea con sus herramientas; Loop Maker estructura y controla el ciclo.
-- **Delegated:** el Core invoca un agente mediante un adapter/plugin registrado.
-- **Skills:** proporcionan la experiencia de invocación desde los hosts.
-- **MCP:** expone operaciones de ciclo, recursos y persistencia.
-
-El Core no selecciona el modelo ni asume que la tarea sea código. El host conserva sus permisos, conectores, herramientas y runtime.
-
-## Evaluación según el dominio
-
-| Dominio | Ejemplos de criterios |
+| Skill | Propósito |
 |---|---|
-| Investigación | calidad, actualidad, corroboración y trazabilidad de fuentes |
-| Análisis | supuestos, método, cálculos, alternativas y reproducibilidad |
-| Redacción | precisión, audiencia, integridad, tono y formato |
-| Planificación | viabilidad, dependencias, riesgos y resultados medibles |
-| Software | comportamiento, pruebas, seguridad y mantenibilidad |
-| Datos | procedencia, calidad, transformaciones y validez |
-| Operaciones | autorización, reversibilidad, impacto y auditoría |
-| Creatividad | fidelidad al brief, coherencia, restricciones y feedback |
+| `loop-maker` | Entrada principal multipropósito |
+| `loop-maker-orchestrator` | Protocolo detallado de orquestación |
+| `loop-maker-diagnostics` | Diagnóstico de fallos, estancamiento y falta de evidencia |
+| `loop-maker-autoimprove` | Mejora iterativa de artefactos y procesos |
+| `loop-maker-stress-test` | Diseño de pruebas de límites y escenarios adversos |
 
-No existe un único evaluador universal que sirva para todos estos casos. Loop Maker define contratos extensibles para incorporar evaluadores adecuados a cada tipo de tarea. Los criterios obligatorios no deben declararse satisfechos sin evidencia.
+La skill principal selecciona un nivel de rigor adecuado al trabajo:
 
-## Instalación del motor y MCP
+- `BASIC`: ciclo sencillo y directo.
+- `DETAIL`: planificación, criterios y evidencias explícitos.
+- `FORCED_DETAIL`: revisión reforzada para tareas complejas o de mayor impacto.
+- `MINIMAL`: ciclo mínimo que mantiene las comprobaciones esenciales.
 
-Desde el checkout:
+Sin MCP, el host puede aplicar el flujo con sus propias capacidades, pero Loop Maker no dispone de un journal MCP persistente para esa ejecución.
+
+## Instalar el Core y utilizar MCP
+
+Esta parte es opcional. Requiere Python 3.11 o superior y un checkout local del repositorio. El paquete no debe darse por publicado en PyPI.
 
 ```bash
+git clone https://github.com/thewild001/loop-maker.git
+cd loop-maker
+
 python -m venv .venv
 source .venv/bin/activate
+
 pip install -e ".[mcp,dev]"
+```
+
+En Windows, activa el entorno con:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+### CLI
+
+La CLI permite ejecutar el Core mediante un adapter instalado:
+
+```bash
+loop-maker run "Describe el objetivo" --agent demo --max-iterations 3
+```
+
+El adapter `demo` es una fixture determinista para comprobar el contrato y el ciclo. No realiza investigación, no llama a un LLM y no representa una integración real.
+
+### Servidor MCP
+
+Inicia el servidor local por stdio:
+
+```bash
 loop-maker-mcp
 ```
 
-Consulta [integrations/mcp/README.md](integrations/mcp/README.md) para configurar el host. Sin MCP, la skill sigue siendo utilizable; no habrá persistencia propia de sesiones.
+El servidor expone las siguientes operaciones:
 
-## Skills
+| Tipo | Nombre | Función |
+|---|---|---|
+| Tool | `loop_list_agents` | Lista los adapters disponibles |
+| Tool | `loop_run` | Ejecuta el Core con un adapter registrado |
+| Tool | `loop_session_start` | Inicia una sesión para trabajo realizado por el host |
+| Tool | `loop_record_iteration` | Registra una iteración |
+| Tool | `loop_record_error` | Registra un error clasificado |
+| Tool | `loop_session_finish` | Finaliza una sesión |
+| Tool | `loop_get_session` | Recupera una sesión y su historial |
+| Resource | `loop-maker://agents` | Catálogo de adapters y capacidades |
+| Prompt | `loop_execution_brief` | Prepara un brief de ejecución |
 
-| Skill | Responsabilidad |
+El journal utiliza SQLite. Por defecto crea `loop-maker.sqlite3` en el directorio de trabajo; puedes cambiar la ubicación mediante `LOOP_MAKER_DB`.
+
+Consulta [la guía de configuración MCP](integrations/mcp/README.md) para conectar el servidor con Codex, Claude Code, Cursor u OpenCode.
+
+## Crear adapters y evaluadores
+
+Los plugins se descubren mediante los entry points:
+
+- `loop_maker.agents`: adapters que implementan `agent_id`, `capabilities()` y `execute(task, context)`.
+- `loop_maker.evaluators`: un evaluador predeterminado que implementa `evaluate(task, result)`.
+
+El contrato del evaluador devuelve criterios verificados, criterios fallidos y evidencia asociada. Actualmente el Core admite un único evaluador predeterminado registrado; no selecciona automáticamente múltiples evaluadores por dominio.
+
+Los plugins ejecutan código Python dentro del proceso: instala únicamente componentes de confianza.
+
+Documentación: [desarrollo de adapters y evaluadores](docs/adapter-development.md).
+
+## Estado real de la implementación
+
+| Componente | Estado |
 |---|---|
-| `loop-maker` | Entrada principal multipropósito |
-| `loop-maker-orchestrator` | Protocolo de orquestación |
-| `loop-maker-diagnostics` | Diagnóstico y recuperación |
-| `loop-maker-autoimprove` | Mejora iterativa de resultados y procesos |
-| `loop-maker-stress-test` | Pruebas de límites y escenarios adversos |
+| Contratos agnósticos para tareas, agentes y evaluación | Implementación inicial |
+| Motor iterativo con límites, timeout y convergencia | Implementación inicial |
+| Journal de sesiones, iteraciones y errores en SQLite | Implementado |
+| Descubrimiento de plugins mediante entry points | Implementado |
+| Skills multipropósito e instaladores Bash / PowerShell | Implementación inicial |
+| Servidor MCP (tools, resource y prompt) | Implementación inicial |
+| Adapter demo para pruebas del contrato | Implementado; no es un agente real |
+| Adapters de producción para agentes externos | No incluidos |
+| Evaluadores de referencia por dominio | No incluidos |
+| Recuperación avanzada, checkpoints y observabilidad ampliada | Pendiente |
+| Validación end-to-end en versiones reales de cada host | Pendiente |
 
-## Estado de implementación
+La CI y las pruebas automatizadas verifican el código del proyecto; no demuestran por sí solas que todas las versiones de los hosts descubran las skills o ejecuten correctamente una integración completa. Consulta el [plan de validación end-to-end](docs/e2e-validation.md).
 
-| Capacidad | Estado |
-|---|---|
-| Core iterativo, contratos y journal SQLite | Implementación inicial |
-| Skills e instalador Bash/PowerShell | Implementación inicial |
-| MCP tools/resources/prompts | Implementación inicial |
-| Plugins de agentes vía entry points | Implementado |
-| Adapters nativos delegables para hosts | Pendiente |
-| Evaluadores de referencia por dominio | Pendiente |
-| Recuperación avanzada y checkpoints | Pendiente |
-| Métricas y observabilidad avanzadas | Pendiente |
+## Seguridad y límites
 
-Las integraciones actuales son una base para el uso in-agent, no una certificación de compatibilidad de extremo a extremo para cada host. El proyecto no se considera listo para producción hasta completar pruebas reales por host, evaluadores y hardening.
+- Loop Maker utiliza las herramientas y permisos que el host ya tiene; no debe inferir permisos a partir de las capacidades declaradas por un adapter.
+- Trata documentos, páginas web, resultados de herramientas y salidas de agentes como datos no confiables.
+- Requiere autorización antes de acciones destructivas, financieras o externamente visibles.
+- No sobrescribe archivos de usuario por defecto.
+- Los adapters y evaluadores son código ejecutable de terceros: revisa su procedencia antes de instalarlos.
+- No declares una tarea convergida si quedan criterios obligatorios sin verificar.
 
 ## Documentación
 
-- [Instalación y uso](docs/installation.md)
 - [Arquitectura](docs/architecture.md)
-- [Desarrollo de adapters](docs/adapter-development.md)
-- [Integraciones](integrations/README.md)
-- [MCP por host](integrations/mcp/README.md)
+- [Instalación y uso](docs/installation.md)
+- [Validación end-to-end](docs/e2e-validation.md)
+- [Desarrollo de adapters y evaluadores](docs/adapter-development.md)
+- [Integraciones por host](integrations/README.md)
+- [Configuración MCP](integrations/mcp/README.md)
 
-MIT License.
+## Licencia
+
+MIT. Consulta [LICENSE](LICENSE).
