@@ -4,7 +4,7 @@ from .discovery import (
     EntryPointAdapterProvider,
     HostInventoryProvider,
 )
-from .models import (
+from .selection import (\n    DeterministicCapabilitySelector,\n    RejectedCapability,\n    RejectionCode,\n    SelectedCapability,\n    SelectionRequest,\n    SelectionResult,\n)\nfrom .models import (
     Authorization,
     Availability,
     CapabilityAssessment,
@@ -24,11 +24,11 @@ from .models import (
 )
 
 __all__ = [
-    "Authorization", "Availability", "CapabilityAssessment",
+    "Authorization", "Availability", "CapabilityAssessment",\n    "DeterministicCapabilitySelector",
     "CapabilityCategory", "CapabilityConstraints", "CapabilityDescriptor",
     "CapabilityDiscovery", "CapabilityInterface", "CapabilityInventory",
     "CapabilityOperation", "CapabilityProvider", "CapabilitySource",
     "DiscoveryContext", "DiscoveryError", "EntryPointAdapterProvider",
-    "HostInventoryProvider", "InterfaceKind", "ProviderDiscoveryResult",
+    "HostInventoryProvider", "InterfaceKind", "ProviderDiscoveryResult",\n    "RejectedCapability", "RejectionCode", "SelectedCapability",\n    "SelectionRequest", "SelectionResult",
     "ProviderStatus",
 ]
