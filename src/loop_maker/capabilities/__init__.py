@@ -22,6 +22,12 @@ from .models import (
     ProviderDiscoveryResult,
     ProviderStatus,
 )
+from .ranking import (
+    CapabilityRanker,
+    CapabilityRankingPipeline,
+    RankingCandidate,
+    RankingContext,
+)
 from .selection import (
     DeterministicCapabilitySelector,
     RejectedCapability,
@@ -43,6 +49,8 @@ __all__ = [
     "CapabilityInventory",
     "CapabilityOperation",
     "CapabilityProvider",
+    "CapabilityRanker",
+    "CapabilityRankingPipeline",
     "CapabilitySource",
     "DeterministicCapabilitySelector",
     "DiscoveryContext",
@@ -52,6 +60,8 @@ __all__ = [
     "InterfaceKind",
     "ProviderDiscoveryResult",
     "ProviderStatus",
+    "RankingCandidate",
+    "RankingContext",
     "RejectedCapability",
     "RejectionCode",
     "SelectedCapability",
