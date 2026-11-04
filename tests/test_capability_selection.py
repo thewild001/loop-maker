@@ -28,6 +28,7 @@ def make_capability(
     tags=("web",),
     category=CapabilityCategory.TOOL,
     interface=InterfaceKind.NATIVE,
+    operations=(CapabilityOperation("search", "Search"),),
 ):
     return CapabilityDescriptor(
         id=capability_id,
@@ -36,7 +37,7 @@ def make_capability(
         category=category,
         source=CapabilitySource(provider_id, "host", capability_id),
         interface=CapabilityInterface(interface, capability_id),
-        operations=(CapabilityOperation("search", "Search"),),
+        operations=operations,
         constraints=CapabilityConstraints(tags=tags),
     )
 
@@ -330,3 +331,113 @@ def test_conflicting_same_timestamp_assessments_resolve_conservatively():
         )
         assert not result.selected
         assert result.rejected[0].code is RejectionCode.ACCESS_DENIED
+
+
+
+def test_assessment_for_unrelated_operation_cannot_authorize_requested_operation():
+    capability = make_capability(
+        "cross-operation",
+        operations=(
+            CapabilityOperation("search", "Search"),
+            CapabilityOperation("delete", "Delete"),
+        ),
+    )
+    delete_assessment = CapabilityAssessment(
+        capability_id="cross-operation",
+        operation_id="delete",
+        availability=Availability.AVAILABLE,
+        authorization=Authorization.ALLOWED,
+    )
+    result = DeterministicCapabilitySelector().select(
+        CapabilityInventory(
+            capabilities=(capability,),
+            assessments=(delete_assessment,),
+        ),
+        SelectionRequest(operation_id="search"),
+    )
+    assert not result.selected
+    assert result.rejected[0].code is RejectionCode.ASSESSMENT_MISSING
+
+
+def test_generic_assessment_is_used_when_only_other_operation_assessment_also_exists():
+    capability = make_capability(
+        "generic-fallback",
+        operations=(
+            CapabilityOperation("search", "Search"),
+            CapabilityOperation("delete", "Delete"),
+        ),
+    )
+    generic = CapabilityAssessment(
+        capability_id="generic-fallback",
+        availability=Availability.AVAILABLE,
+        authorization=Authorization.ALLOWED,
+    )
+    unrelated = CapabilityAssessment(
+        capability_id="generic-fallback",
+        operation_id="delete",
+        availability=Availability.AVAILABLE,
+        authorization=Authorization.DENIED,
+    )
+    result = DeterministicCapabilitySelector().select(
+        CapabilityInventory(
+            capabilities=(capability,),
+            assessments=(unrelated, generic),
+        ),
+        SelectionRequest(operation_id="search"),
+    )
+    assert len(result.selected) == 1
+    assert result.selected[0].assessment is generic
+
+
+def test_operation_specific_global_assessment_precedes_context_generic_assessment():
+    capability = make_capability("scope-precedence")
+    context_generic = CapabilityAssessment(
+        capability_id="scope-precedence",
+        availability=Availability.AVAILABLE,
+        authorization=Authorization.ALLOWED,
+        context_ref="session-A",
+    )
+    operation_global = CapabilityAssessment(
+        capability_id="scope-precedence",
+        operation_id="search",
+        availability=Availability.AVAILABLE,
+        authorization=Authorization.DENIED,
+    )
+    result = DeterministicCapabilitySelector().select(
+        CapabilityInventory(
+            capabilities=(capability,),
+            assessments=(context_generic, operation_global),
+        ),
+        SelectionRequest(operation_id="search", context_ref="session-A"),
+    )
+    assert not result.selected
+    assert result.rejected[0].code is RejectionCode.ACCESS_DENIED
+
+
+@pytest.mark.parametrize("value", [1.5, True, 0, -1])
+def test_max_results_requires_a_strictly_positive_integer(value):
+    with pytest.raises(ValueError, match="max_results"):
+        SelectionRequest(operation_id="search", max_results=value)
+
+
+def test_request_rejects_non_boolean_allow_degraded():
+    with pytest.raises(TypeError, match="allow_degraded"):
+        SelectionRequest(operation_id="search", allow_degraded="false")
+
+
+@pytest.mark.parametrize(
+    "kwargs, error",
+    [
+        ({"categories": [CapabilityCategory.TOOL]}, TypeError),
+        ({"categories": ("tool",)}, TypeError),
+        ({"interface_kinds": [InterfaceKind.NATIVE]}, TypeError),
+        ({"interface_kinds": ("native",)}, TypeError),
+        ({"required_tags": "web"}, TypeError),
+        ({"allowed_providers": "host.native"}, TypeError),
+        ({"excluded_providers": ["host.native"]}, TypeError),
+        ({"preferred_providers": "host.native"}, TypeError),
+    ],
+)
+def test_request_rejects_invalid_collection_shapes_and_values(kwargs, error):
+    with pytest.raises(error):
+        SelectionRequest(operation_id="search", **kwargs)
