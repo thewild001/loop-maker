@@ -16,8 +16,7 @@ COPY pyproject.toml README.md ./
 COPY src ./src
 
 RUN python -m pip install --upgrade pip \
-    && python -m pip install --no-cache-dir ".[mcp]" \
-    && python -m pip cache purge
+    && python -m pip install --no-cache-dir ".[mcp]"
 
 USER loopmaker
 
