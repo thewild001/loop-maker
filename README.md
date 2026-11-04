@@ -264,6 +264,9 @@ En Windows, activa el entorno con:
 La CLI permite ejecutar el Core mediante un adapter instalado:
 
 ```bash
+adaptix run "Describe el objetivo" --agent demo --max-iterations 3
+
+# El comando histórico sigue disponible
 loop-maker run "Describe el objetivo" --agent demo --max-iterations 3
 ```
 
@@ -274,8 +277,10 @@ El adapter `demo` es una fixture determinista para comprobar el contrato y el ci
 Inicia el servidor local por stdio:
 
 ```bash
-loop-maker-mcp
+adaptix-mcp
 ```
+
+El comando histórico `loop-maker-mcp` continúa disponible como alias de compatibilidad.
 
 El servidor expone las siguientes operaciones:
 

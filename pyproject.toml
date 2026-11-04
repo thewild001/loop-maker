@@ -16,6 +16,8 @@ mcp = ["mcp>=2,<3"]
 dev = ["pytest>=8", "pytest-asyncio>=0.23", "ruff>=0.6"]
 
 [project.scripts]
+adaptix = "loop_maker.cli:adaptix_main"
+adaptix-mcp = "loop_maker.mcp_server:main"
 loop-maker = "loop_maker.cli:main"
 loop-maker-mcp = "loop_maker.mcp_server:main"
 
