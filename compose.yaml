@@ -1,0 +1,17 @@
+services:
+  loop-maker-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: loop-maker-mcp:local
+    stdin_open: true
+    tty: false
+    init: true
+    environment:
+      LOOP_MAKER_DB: /data/loop-maker.sqlite3
+    volumes:
+      - loop-maker-data:/data
+    # MCP stdio is intended to be attached to a client. Do not run detached.
+
+volumes:
+  loop-maker-data:
