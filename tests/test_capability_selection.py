@@ -194,6 +194,67 @@ def test_max_results_limits_selected_candidates_without_changing_rejections():
     assert not result.rejected
 
 
+
+
+def test_context_bound_assessments_are_never_reused_across_sessions():
+    capability = make_capability("session-bound")
+    foreign = CapabilityAssessment(
+        capability_id="session-bound",
+        operation_id="search",
+        availability=Availability.AVAILABLE,
+        authorization=Authorization.ALLOWED,
+        context_ref="session-A",
+    )
+    result = DeterministicCapabilitySelector().select(
+        CapabilityInventory(capabilities=(capability,), assessments=(foreign,)),
+        SelectionRequest(operation_id="search", context_ref="session-B"),
+    )
+    assert not result.selected
+    assert result.rejected[0].code is RejectionCode.ASSESSMENT_CONTEXT_MISMATCH
+
+
+def test_context_specific_assessment_takes_precedence_over_global_assessment():
+    capability = make_capability("session-precedence")
+    global_assessment = CapabilityAssessment(
+        capability_id="session-precedence",
+        operation_id="search",
+        availability=Availability.AVAILABLE,
+        authorization=Authorization.ALLOWED,
+    )
+    session_assessment = CapabilityAssessment(
+        capability_id="session-precedence",
+        operation_id="search",
+        availability=Availability.AVAILABLE,
+        authorization=Authorization.DENIED,
+        context_ref="session-A",
+    )
+    result = DeterministicCapabilitySelector().select(
+        CapabilityInventory(
+            capabilities=(capability,),
+            assessments=(global_assessment, session_assessment),
+        ),
+        SelectionRequest(operation_id="search", context_ref="session-A"),
+    )
+    assert not result.selected
+    assert result.rejected[0].code is RejectionCode.ACCESS_DENIED
+
+
+def test_context_bound_assessment_is_not_used_without_matching_request_context():
+    capability = make_capability("no-context")
+    scoped = CapabilityAssessment(
+        capability_id="no-context",
+        operation_id="search",
+        availability=Availability.AVAILABLE,
+        authorization=Authorization.ALLOWED,
+        context_ref="session-A",
+    )
+    result = DeterministicCapabilitySelector().select(
+        CapabilityInventory(capabilities=(capability,), assessments=(scoped,)),
+        SelectionRequest(operation_id="search"),
+    )
+    assert result.rejected[0].code is RejectionCode.ASSESSMENT_CONTEXT_MISMATCH
+
+
 def test_missing_assessment_is_rejected_closed():
     capability = make_capability("unassessed")
     result = DeterministicCapabilitySelector().select(
