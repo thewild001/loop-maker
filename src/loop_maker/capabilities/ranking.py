@@ -5,8 +5,9 @@ change assessments, authorize operations, resolve bindings, or invoke tools.
 """
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, replace
-from typing import Protocol, Sequence
+from typing import Protocol
 
 from .models import CapabilityCategory, CapabilityInventory, InterfaceKind
 from .selection import (
@@ -135,8 +136,8 @@ class CapabilityRankingPipeline:
         proposed: Sequence[str],
         eligible_ids: tuple[str, ...],
     ) -> tuple[str, ...]:
-        if not isinstance(proposed, (tuple, list)):
-            raise ValueError("ranker output must be a tuple or list of IDs")
+        if isinstance(proposed, (str, bytes)) or not isinstance(proposed, Sequence):
+            raise ValueError("ranker output must be a sequence of IDs")
         if not all(isinstance(item, str) and item for item in proposed):
             raise ValueError("ranker output contains an invalid capability ID")
         ordered = tuple(proposed)
