@@ -235,3 +235,37 @@ def test_capability_wide_assessment_is_fallback_to_operation_specific_state():
     )
     assert len(generic_result.selected) == 1
     assert specific_result.rejected[0].code is RejectionCode.ACCESS_DENIED
+
+
+
+def test_conflicting_same_timestamp_assessments_resolve_conservatively():
+    from datetime import datetime, timezone
+
+    capability = make_capability("conflict")
+    timestamp = datetime.now(timezone.utc)
+    allowed = CapabilityAssessment(
+        capability_id="conflict",
+        operation_id="search",
+        availability=Availability.AVAILABLE,
+        authorization=Authorization.ALLOWED,
+        assessed_at=timestamp,
+    )
+    denied = CapabilityAssessment(
+        capability_id="conflict",
+        operation_id="search",
+        availability=Availability.AVAILABLE,
+        authorization=Authorization.DENIED,
+        assessed_at=timestamp,
+    )
+    selector = DeterministicCapabilitySelector()
+    request = SelectionRequest(operation_id="search")
+
+    for assessments in ((allowed, denied), (denied, allowed)):
+        result = selector.select(
+            CapabilityInventory(
+                capabilities=(capability,), assessments=assessments
+            ),
+            request,
+        )
+        assert not result.selected
+        assert result.rejected[0].code is RejectionCode.ACCESS_DENIED
