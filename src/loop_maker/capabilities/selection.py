@@ -128,7 +128,12 @@ class DeterministicCapabilitySelector:
         self,
         inventory: CapabilityInventory,
         request: SelectionRequest,
+        *,
+        apply_limit: bool = True,
     ) -> SelectionResult:
+        """Select eligible capabilities; optionally defer max_results to a ranker."""
+        if type(apply_limit) is not bool:
+            raise TypeError("apply_limit must be a bool")
         selected: list[tuple[CapabilityDescriptor, CapabilityAssessment]] = []
         approval: list[tuple[CapabilityDescriptor, CapabilityAssessment]] = []
         rejected: list[RejectedCapability] = []
@@ -168,7 +173,7 @@ class DeterministicCapabilitySelector:
 
         selected.sort(key=lambda item: self._sort_key(item[0], request))
         approval.sort(key=lambda item: self._sort_key(item[0], request))
-        if request.max_results is not None:
+        if apply_limit and request.max_results is not None:
             selected = selected[:request.max_results]
 
         ranked = tuple(
