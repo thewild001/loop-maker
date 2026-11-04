@@ -13,12 +13,19 @@ from .contracts import LoopConfig, Task
 from .demo_agent import DemoAgent
 from .engine import LoopEngine
 from .evolution import EvolutionStore
+from .evolution_proposals import SkillProposalStore
 from .registry import discover_adapters, discover_evaluator
 from .storage import SessionStore
 
 mcp = MCPServer("loop-maker-orchestrator")
 store = SessionStore(os.getenv("LOOP_MAKER_DB", "loop-maker.sqlite3"))
-evolution_store = EvolutionStore(os.getenv("LOOP_MAKER_EVOLUTION_DB", "loop-maker-evolution.sqlite3"))
+evolution_db = os.getenv("LOOP_MAKER_EVOLUTION_DB", "loop-maker-evolution.sqlite3")
+evolution_store = EvolutionStore(evolution_db)
+proposal_store = SkillProposalStore(
+    os.getenv("LOOP_MAKER_EVOLUTION_DB", "loop-maker-evolution.sqlite3"),
+    skills_dir=os.getenv("LOOP_MAKER_SKILLS_DIR", "skills"),
+    staging_dir=os.getenv("LOOP_MAKER_EVOLUTION_STAGING_DIR"),
+)
 engine = LoopEngine(store, evaluator=discover_evaluator())
 agents = {"demo": DemoAgent(), **discover_adapters()}
 VALID_MODES = {"BASIC", "DETAIL", "FORCED_DETAIL", "MINIMAL"}
@@ -171,6 +178,73 @@ def loop_evolution_review(min_sessions: int = 2, limit: int = 50) -> dict:
     """Review observations for recurring evidence-backed candidates and mixed signals."""
     try:
         return evolution_store.review_patterns(min_sessions=min_sessions, limit=limit)
+    except ValueError as exc:
+        return {"error": str(exc)}
+
+
+@mcp.tool()
+def loop_skill_proposal_create(skill_path: str, proposed_content: str, rationale: str,
+                               observation_ids: list[str]) -> dict:
+    """Create a proposal from the current skill; the active skill is never modified."""
+    try:
+        return proposal_store.create_proposal(
+            skill_path=skill_path, proposed_content=proposed_content,
+            rationale=rationale, observation_ids=observation_ids,
+        )
+    except (OSError, ValueError) as exc:
+        return {"error": str(exc)}
+
+
+@mcp.tool()
+def loop_skill_proposal_list(status: str | None = None, limit: int = 50) -> list[dict] | dict:
+    """List bounded skill evolution proposals."""
+    try:
+        return proposal_store.list_proposals(status=status, limit=limit)
+    except ValueError as exc:
+        return {"error": str(exc)}
+
+
+@mcp.tool()
+def loop_skill_proposal_get(proposal_id: str) -> dict:
+    """Retrieve proposal metadata without exposing its full content snapshot."""
+    try:
+        return proposal_store.get_proposal(proposal_id)
+    except ValueError as exc:
+        return {"error": str(exc)}
+
+
+@mcp.tool()
+def loop_skill_proposal_stage(proposal_id: str) -> dict:
+    """Write proposed content to an isolated staging directory, never to active skills."""
+    try:
+        return proposal_store.stage_proposal(proposal_id)
+    except (OSError, ValueError) as exc:
+        return {"error": str(exc)}
+
+
+@mcp.tool()
+def loop_skill_proposal_diff(proposal_id: str) -> dict:
+    """Return a unified diff between the active snapshot and proposed skill."""
+    try:
+        return proposal_store.diff_proposal(proposal_id)
+    except ValueError as exc:
+        return {"error": str(exc)}
+
+
+@mcp.tool()
+def loop_skill_proposal_validate(proposal_id: str) -> dict:
+    """Run structural and stale-source checks; this does not execute the skill."""
+    try:
+        return proposal_store.validate_proposal(proposal_id)
+    except ValueError as exc:
+        return {"error": str(exc)}
+
+
+@mcp.tool()
+def loop_skill_proposal_approve(proposal_id: str, approved: bool) -> dict:
+    """Record an explicit human approval/rejection; does not publish the skill."""
+    try:
+        return proposal_store.approve_proposal(proposal_id, approved=approved)
     except ValueError as exc:
         return {"error": str(exc)}
 
