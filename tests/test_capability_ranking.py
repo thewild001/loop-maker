@@ -143,3 +143,26 @@ def test_ranker_cannot_reintroduce_denied_candidates():
         inventory, SelectionRequest(operation_id="search")
     )
     assert [item.capability.id for item in result.selected] == ["a", "b"]
+    assert [item.capability_id for item in ranker.candidates] == ["a", "b"]
+
+
+
+def test_approval_required_candidates_are_never_sent_to_ranker():
+    inventory = make_inventory()
+    approval = CapabilityAssessment(
+        capability_id="a",
+        operation_id="search",
+        availability=Availability.AVAILABLE,
+        authorization=Authorization.REQUIRES_APPROVAL,
+    )
+    inventory = CapabilityInventory(
+        capabilities=inventory.capabilities[:1],
+        assessments=(approval,),
+    )
+    ranker = FixedRanker(["a"])
+    result = CapabilityRankingPipeline(ranker=ranker).select(
+        inventory, SelectionRequest(operation_id="search")
+    )
+    assert not result.selected
+    assert [item.capability.id for item in result.approval_required] == ["a"]
+    assert ranker.candidates is None
