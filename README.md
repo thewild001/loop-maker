@@ -142,8 +142,8 @@ irm https://raw.githubusercontent.com/thewild001/loop-maker/main/bootstrap.ps1 |
 Para elegir el destino, descarga el script y ejecútalo:
 
 ```powershell
-Invoke-WebRequest "https://raw.githubusercontent.com/thewild001/loop-maker/main/bootstrap.ps1" -OutFile ".\loop-maker-bootstrap.ps1"
-.\loop-maker-bootstrap.ps1 -Target "C:\ruta\al\proyecto"
+Invoke-WebRequest "https://raw.githubusercontent.com/thewild001/loop-maker/main/bootstrap.ps1" -OutFile ".\\loop-maker-bootstrap.ps1"
+.\\loop-maker-bootstrap.ps1 -Target "C:\\ruta\\al\\proyecto"
 ```
 
 Los instaladores preservan los archivos existentes por defecto. Usa `--force` en Bash o `-Force` en PowerShell para reemplazarlos explícitamente.
@@ -174,6 +174,8 @@ Abre el proyecto instalado en tu agente y solicita el flujo adecuado:
 /loop-maker-diagnostics
 /loop-maker-autoimprove
 /loop-maker-stress-test
+/loop-maker-advisory "Contrasta estas alternativas antes de decidir"
+/loop-maker-reach "Investiga fuentes públicas de este tema cuando las herramientas nativas no sean suficientes"
 ```
 
 Las skills disponibles son:
@@ -185,6 +187,14 @@ Las skills disponibles son:
 | `loop-maker-diagnostics` | Diagnóstico de fallos, estancamiento y falta de evidencia |
 | `loop-maker-autoimprove` | Mejora iterativa de artefactos y procesos |
 | `loop-maker-stress-test` | Diseño de pruebas de límites y escenarios adversos |
+| `loop-maker-advisory` | Deliberación opcional para decisiones complejas y de alto impacto |
+| `loop-maker-reach` | Recuperación externa de solo lectura mediante Agent Reach, cuando las herramientas nativas no bastan |
+
+### Agent Reach (integración opcional)
+
+`loop-maker-reach` utiliza el CLI externo de [Agent Reach](https://github.com/Panniantong/Agent-Reach). No forma parte del Core ni se instala automáticamente con Loop Maker. El host debe tener Agent Reach instalado y configurado por separado.
+
+La skill prioriza las herramientas nativas, utiliza Agent Reach solo cuando está justificado y trata todo contenido recuperado como no confiable. La instalación, configuración, actualización, login y cambios de entorno requieren autorización explícita. Consulta [la skill](skills/loop-maker-reach/SKILL.md), [referencia de canales](skills/loop-maker-reach/CHANNELS.md) y [límites de seguridad](skills/loop-maker-reach/SECURITY.md).
 
 La skill principal selecciona un nivel de rigor adecuado al trabajo:
 
@@ -212,7 +222,7 @@ pip install -e ".[mcp,dev]"
 En Windows, activa el entorno con:
 
 ```powershell
-.venv\Scripts\Activate.ps1
+.venv\\Scripts\\Activate.ps1
 ```
 
 ### CLI
@@ -249,14 +259,8 @@ El servidor expone las siguientes operaciones:
 
 El journal utiliza SQLite. Por defecto crea `loop-maker.sqlite3` en el directorio de trabajo; puedes cambiar la ubicación mediante `LOOP_MAKER_DB`.
 
-También puedes ejecutar el MCP dentro de Docker, sin instalar Python en el host:
+Consulta [la guía de configuración MCP](integrations/mcp/README.md) para conectar el servidor con Codex, Claude Code, Cursor u OpenCode.\n\n### Evolution Engine — Observer (fase inicial)\n\nLoop Maker incluye una skill opcional para registrar aprendizajes reutilizables y consultar patrones candidatos. Utiliza un registro SQLite independiente (`LOOP_MAKER_EVOLUTION_DB`) y herramientas MCP propias. La captura es explícita, no se recopilan conversaciones completas y no se modifican skills. Consulta [la guía del Observer](docs/evolution-observer.md).
 
-```bash
-docker build -t loop-maker-mcp:local .
-docker volume create loop-maker-data
-```
-
-Configura el cliente para ejecutar `docker run --rm -i -v loop-maker-data:/data loop-maker-mcp:local` como servidor MCP stdio. No se expone ningún puerto y el volumen conserva el journal SQLite. Consulta [la guía Docker MCP](docs/docker-mcp.md) y [la configuración MCP por host](integrations/mcp/README.md) para los ejemplos completos. Si tu agente ya tiene un servidor de memoria como Engram configurado, Loop Maker puede utilizarlo sin conexión adicional; consulta [la guía de memoria externa](docs/external-memory.md).
 
 ## Crear adapters y evaluadores
 
