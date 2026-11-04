@@ -14,7 +14,7 @@
 ![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-ADAPTIX es una capa de orquestación que se utiliza **desde el agente de IA que ya empleas**. No es otro agente, no sustituye al modelo ni impone un runtime. Su función es aportar estructura, límites, criterios de aceptación y trazabilidad al trabajo realizado por agentes.
+ADAPTIX es un motor de ejecución adaptativa que se integra **desde el agente de IA que ya empleas**. No es otro agente, no sustituye al modelo ni impone un runtime. Su función es aportar estructura, límites, criterios de aceptación y trazabilidad al trabajo realizado por agentes.
 
 No está limitado al desarrollo de software. Puede aplicarse a investigación, análisis, redacción, planificación, programación, datos, operaciones, aprendizaje y producción creativa. El ciclo es común; la forma de evaluar cambia según el trabajo.
 
