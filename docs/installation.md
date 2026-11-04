@@ -57,3 +57,13 @@ Consulta [MCP por host](../integrations/mcp/README.md). Instala el extra MCP des
 - `--force` / `-Force` permite reemplazar los archivos instalados por ADAPTIX.
 - El instalador no edita la configuración MCP del host.
 - Revisa los cambios antes de utilizarlo en repositorios o espacios de trabajo sensibles.
+
+
+## Comandos de ADAPTIX y compatibilidad
+
+Los nuevos entornos pueden utilizar los comandos de marca:
+
+- `adaptix`: CLI del motor.
+- `adaptix-mcp`: servidor MCP por stdio.
+
+Los comandos históricos `loop-maker` y `loop-maker-mcp` se mantienen como aliases compatibles. Ambos pares invocan las mismas implementaciones; no existen runtimes ni configuraciones separados.
