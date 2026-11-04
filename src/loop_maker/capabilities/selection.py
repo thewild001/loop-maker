@@ -38,7 +38,11 @@ class RejectionCode(str, Enum):
 
 @dataclass(frozen=True, slots=True)
 class SelectionRequest:
-    """Declarative requirements for one capability operation."""
+    """Declarative requirements for one capability operation.
+
+    ``objective`` is retained as request context for future intelligent rankers;
+    this deterministic selector does not infer semantic relevance from prose.
+    """
 
     operation_id: str
     objective: str | None = None
@@ -114,7 +118,10 @@ class DeterministicCapabilitySelector:
                 rejected.append(RejectedCapability(capability.id, reason[0], reason[1]))
                 continue
 
-            assessment = assessments.get((capability.id, request.operation_id))
+            # An operation-specific assessment takes precedence over a capability-wide one.
+            assessment = assessments.get((capability.id, request.operation_id)) or assessments.get(
+                (capability.id, None)
+            )
             if assessment is None:
                 rejected.append(RejectedCapability(
                     capability.id,
@@ -167,12 +174,10 @@ class DeterministicCapabilitySelector:
     @staticmethod
     def _assessment_index(
         assessments: tuple[CapabilityAssessment, ...],
-    ) -> dict[tuple[str, str], CapabilityAssessment]:
-        """Choose the newest operation-specific assessment for each pair."""
-        index: dict[tuple[str, str], CapabilityAssessment] = {}
+    ) -> dict[tuple[str, str | None], CapabilityAssessment]:
+        """Keep the newest assessment per capability and operation scope."""
+        index: dict[tuple[str, str | None], CapabilityAssessment] = {}
         for assessment in assessments:
-            if assessment.operation_id is None:
-                continue
             key = (assessment.capability_id, assessment.operation_id)
             current = index.get(key)
             if current is None or assessment.assessed_at > current.assessed_at:
