@@ -98,6 +98,30 @@ El Core ejecuta tareas a través de un adapter que implementa el contrato `Agent
 
 MCP no convierte por sí solo al host en un adapter ni ejecuta automáticamente sus tareas: expone operaciones que el agente puede utilizar.
 
+
+## Capability Discovery & Selection
+
+Loop Maker incorpora una capa inicial para descubrir y seleccionar capacidades disponibles en el entorno anfitrión y en providers complementarios autorizados. Esta capa identifica **qué puede utilizarse**; no ejecuta herramientas ni concede permisos.
+
+El diseño sigue un modelo híbrido:
+
+- **Host-driven discovery (principal):** el host proporciona el inventario de capacidades que ya conoce y expone.
+- **Loop-driven discovery (complementario):** Loop Maker consulta providers adicionales únicamente cuando están permitidos explícitamente.
+- Los errores de un provider complementario se aíslan y no invalidan automáticamente el inventario aportado por el host.
+
+La selección aplica primero filtros determinísticos de operación, categoría, interfaz, proveedor, tags, disponibilidad y autorización. Las capacidades que requieren aprobación se mantienen separadas; las no autorizadas o incompatibles no llegan al ranking.
+
+### Ranking inteligente opcional
+
+Después de los filtros obligatorios, un `CapabilityRanker` opcional puede ordenar las capacidades elegibles según el objetivo. El pipeline valida que la respuesta sea una permutación exacta de los IDs elegibles. Si no hay ranker, falla o devuelve un resultado inválido, se conserva el orden determinístico.
+
+El contrato es agnóstico del proveedor: no incorpora un cliente LLM, no administra modelos ni credenciales y no requiere un LLM. El host puede implementar el contrato con su propio sistema de razonamiento o con un ranker no basado en LLM.
+
+**Límite de seguridad:** descubrir o seleccionar una capacidad no equivale a invocarla. El host o adapter debe volver a comprobar permisos y disponibilidad en el momento de ejecución. Los datos descriptivos procedentes de providers se consideran no confiables.
+
+Implementación inicial disponible en `loop_maker.capabilities`. Consulta [el diseño de discovery y selection](docs/capability-discovery-selection-v1.md) y [el diseño de intelligent ranking](docs/intelligent-capability-ranking-v1.md).
+
+
 ## Dominios y evaluación
 
 Los criterios se definen según el resultado esperado. Algunos ejemplos:
@@ -285,6 +309,9 @@ Documentación: [desarrollo de adapters y evaluadores](docs/adapter-development.
 | Descubrimiento de plugins mediante entry points | Implementado |
 | Skills multipropósito e instaladores Bash / PowerShell | Implementación inicial |
 | Servidor MCP (tools, resource y prompt) | Implementación inicial |
+| Capability discovery híbrido (host + providers autorizados) | Implementación inicial |
+| Selección determinística con filtros de disponibilidad y autorización | Implementación inicial |
+| Ranking inteligente opcional con fallback determinístico | Implementación inicial; sin adaptador LLM incluido |
 | Adapter demo para pruebas del contrato | Implementado; no es un agente real |
 | Adapters de producción para agentes externos | No incluidos |
 | Evaluadores de referencia por dominio | No incluidos |
