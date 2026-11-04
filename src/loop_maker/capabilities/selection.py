@@ -58,8 +58,10 @@ class SelectionRequest:
     def __post_init__(self) -> None:
         if not isinstance(self.operation_id, str) or not self.operation_id.strip():
             raise ValueError("operation_id must be a non-empty string")
-        if self.objective is not None and not self.objective.strip():
-            raise ValueError("objective must be non-empty when provided")
+        if self.objective is not None and (
+            not isinstance(self.objective, str) or not self.objective.strip()
+        ):
+            raise ValueError("objective must be a non-empty string when provided")
         if self.max_results is not None and self.max_results < 1:
             raise ValueError("max_results must be greater than zero")
         for provider_id in (
@@ -182,7 +184,37 @@ class DeterministicCapabilitySelector:
             current = index.get(key)
             if current is None or assessment.assessed_at > current.assessed_at:
                 index[key] = assessment
+            elif assessment.assessed_at == current.assessed_at:
+                # Resolve conflicting same-time observations conservatively and
+                # independently of provider iteration order.
+                if DeterministicCapabilitySelector._assessment_safety_key(
+                    assessment
+                ) > DeterministicCapabilitySelector._assessment_safety_key(current):
+                    index[key] = assessment
         return index
+
+    @staticmethod
+    def _assessment_safety_key(
+        assessment: CapabilityAssessment,
+    ) -> tuple[int, int, str, str]:
+        availability_risk = {
+            Availability.AVAILABLE: 0,
+            Availability.DEGRADED: 1,
+            Availability.UNKNOWN: 2,
+            Availability.UNAVAILABLE: 3,
+        }[assessment.availability]
+        authorization_risk = {
+            Authorization.ALLOWED: 0,
+            Authorization.UNKNOWN: 1,
+            Authorization.REQUIRES_APPROVAL: 2,
+            Authorization.DENIED: 3,
+        }[assessment.authorization]
+        return (
+            availability_risk,
+            authorization_risk,
+            assessment.evidence or "",
+            assessment.context_ref or "",
+        )
 
     @staticmethod
     def _static_rejection(
