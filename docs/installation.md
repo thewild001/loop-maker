@@ -1,6 +1,6 @@
 # Instalación y experiencia de uso
 
-Loop Maker se utiliza desde el agente que ya empleas. No instala un agente nuevo ni cambia el proveedor de modelos. La instalación añade skills e instrucciones al proyecto; MCP es opcional y aporta persistencia de sesiones y herramientas compartidas.
+ADAPTIX se utiliza desde el agente que ya empleas. No instala un agente nuevo ni cambia el proveedor de modelos. La instalación añade skills e instrucciones al proyecto; MCP es opcional y aporta persistencia de sesiones y herramientas compartidas. Los comandos y nombres de skills conservan el prefijo histórico `loop-maker` durante la transición para no romper instalaciones existentes.
 
 ## Linux / macOS
 
@@ -49,11 +49,11 @@ La skill principal adapta los criterios de evaluación al dominio: investigació
 
 ## MCP opcional
 
-Consulta [MCP por host](../integrations/mcp/README.md). Instala el extra MCP desde un checkout local; no presupongas que el paquete ya está publicado en PyPI.
+Consulta [MCP por host](../integrations/mcp/README.md). Instala el extra MCP desde un checkout local; no presupongas que el paquete ya está publicado en PyPI. La distribución Python y el módulo de importación conservan sus nombres históricos (`loop-maker-orchestrator` y `loop_maker`).
 
 ## Seguridad
 
 - Los archivos existentes se preservan por defecto.
-- `--force` / `-Force` permite reemplazar los archivos instalados por Loop Maker.
+- `--force` / `-Force` permite reemplazar los archivos instalados por ADAPTIX.
 - El instalador no edita la configuración MCP del host.
 - Revisa los cambios antes de utilizarlo en repositorios o espacios de trabajo sensibles.
