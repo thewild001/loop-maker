@@ -31,7 +31,7 @@ A candidate must pass all of these checks:
 3. Its provider satisfies allow/deny constraints.
 4. It declares every required tag.
 5. It has an assessment for the requested operation or a capability-wide
-   assessment. Operation-specific assessments take precedence.
+   assessment. Assessments for other operations are never applicable.
 6. Availability is `AVAILABLE`, or `DEGRADED` when explicitly permitted.
 7. Authorization is exactly `ALLOWED`.
 
@@ -42,12 +42,30 @@ The selector fails closed:
 - `REQUIRES_APPROVAL` is reported separately and is never returned as eligible;
 - missing assessments are rejected.
 
-The newest assessment is used within each scope. Context-bound assessments are
-usable only when `SelectionRequest.context_ref` matches exactly; they are never
-reused across sessions. Context-free assessments may serve as defaults. When a
-request omits `context_ref`, only context-free assessments are considered. This
-is not a substitute for freshness policy: the host must revalidate availability and authorization at
-the invocation boundary to avoid time-of-check/time-of-use errors.
+Assessment applicability and precedence are evaluated in this order:
+
+1. Filter to capability-wide assessments (`operation_id=None`) and assessments
+   for the exact requested operation. Assessments for unrelated operations are
+   discarded; if no applicable assessment remains, selection fails closed.
+2. Filter to context-free assessments and assessments whose `context_ref`
+   exactly matches the request. A request without a context can use only
+   context-free assessments.
+3. Prefer operation-specific assessments over capability-wide assessments.
+   Within the same operation scope, prefer context-specific assessments over
+   context-free defaults.
+4. Within an equal scope, use the newest assessment. Conflicting assessments
+   with the same timestamp resolve conservatively.
+
+This ordering means an operation-specific global denial cannot be overridden
+by a context-specific capability-wide allow, while a context-specific assessment
+for the requested operation overrides its global counterpart. This is not a
+substitute for freshness policy: the host must revalidate availability and
+authorization at the invocation boundary to avoid time-of-check/time-of-use errors.
+
+`SelectionRequest` also enforces strict runtime types: boolean opt-in for
+degraded availability, positive integer result limits (excluding booleans), enum
+tuples for categories/interfaces, and tuple-of-non-empty-string collections
+for tags and provider constraints.
 
 ## Deterministic ranking
 
