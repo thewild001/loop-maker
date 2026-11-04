@@ -42,8 +42,11 @@ The selector fails closed:
 - `REQUIRES_APPROVAL` is reported separately and is never returned as eligible;
 - missing assessments are rejected.
 
-The newest assessment is used within each scope. This is not a substitute for
-freshness policy: the host must revalidate availability and authorization at
+The newest assessment is used within each scope. Context-bound assessments are
+usable only when `SelectionRequest.context_ref` matches exactly; they are never
+reused across sessions. Context-free assessments may serve as defaults. When a
+request omits `context_ref`, only context-free assessments are considered. This
+is not a substitute for freshness policy: the host must revalidate availability and authorization at
 the invocation boundary to avoid time-of-check/time-of-use errors.
 
 ## Deterministic ranking
