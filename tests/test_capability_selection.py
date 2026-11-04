@@ -208,3 +208,30 @@ def test_request_validates_required_operation_and_limit():
         SelectionRequest(operation_id=" ")
     with pytest.raises(ValueError, match="max_results"):
         SelectionRequest(operation_id="search", max_results=0)
+
+
+def test_capability_wide_assessment_is_fallback_to_operation_specific_state():
+    capability = make_capability("scoped")
+    generic = CapabilityAssessment(
+        capability_id="scoped",
+        availability=Availability.AVAILABLE,
+        authorization=Authorization.ALLOWED,
+    )
+    operation_specific = assessment(
+        "scoped", authorization=Authorization.DENIED
+    )
+    selector = DeterministicCapabilitySelector()
+
+    generic_result = selector.select(
+        CapabilityInventory(capabilities=(capability,), assessments=(generic,)),
+        SelectionRequest(operation_id="search"),
+    )
+    specific_result = selector.select(
+        CapabilityInventory(
+            capabilities=(capability,),
+            assessments=(generic, operation_specific),
+        ),
+        SelectionRequest(operation_id="search"),
+    )
+    assert len(generic_result.selected) == 1
+    assert specific_result.rejected[0].code is RejectionCode.ACCESS_DENIED
