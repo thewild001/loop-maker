@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">ADAPTIX Adaptive Core</title>
+  <desc id="desc">Geometric central core connected to four capability nodes.</desc>
+  <defs>
+    <linearGradient id="core" x1="52" y1="42" x2="202" y2="216" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22D3EE"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="url(#core)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M128 28V65M128 191V228M28 128H65M191 128H228" stroke-width="12"/>
+    <path d="M128 28L128 12M128 244V228M12 128H28M244 128H228" stroke-width="4" opacity=".5"/>
+    <path d="M93 93L70 70M163 93L186 70M93 163L70 186M163 163L186 186" stroke-width="8" opacity=".85"/>
+    <path d="M128 76L180 106V150L128 180L76 150V106Z" stroke-width="10"/>
+  </g>
+  <path d="M128 101L151 114V142L128 155L105 142V114Z" fill="#111827" stroke="#22D3EE" stroke-width="5" stroke-linejoin="round"/>
+  <circle cx="128" cy="128" r="9" fill="#A3E635"/>
+  <g fill="#22D3EE">
+    <circle cx="128" cy="28" r="8"/>
+    <circle cx="128" cy="228" r="8"/>
+    <circle cx="28" cy="128" r="8"/>
+    <circle cx="228" cy="128" r="8"/>
+  </g>
+</svg>
