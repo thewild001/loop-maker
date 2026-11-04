@@ -2,7 +2,7 @@
 
 ## Principio
 
-Loop Maker gestiona ciclos de trabajo de agentes, no un flujo exclusivo de desarrollo de software. El agente host ejecuta la tarea con su propio modelo, herramientas, conectores, memoria y runtime. El Core no asume un dominio, proveedor de modelos ni tipo de artefacto.
+ADAPTIX gestiona ciclos de trabajo de agentes, no un flujo exclusivo de desarrollo de software. El agente host ejecuta la tarea con su propio modelo, herramientas, conectores, memoria y runtime. El Core no asume un dominio, proveedor de modelos ni tipo de artefacto.
 
 ## Modelo de dominio
 
@@ -31,7 +31,7 @@ La evaluación se especializa mediante plugins. El Core aplica lifecycle, límit
 
 ## Modos de uso
 
-1. In-agent: el host ejecuta la tarea y usa Loop Maker para estructurar el ciclo y, opcionalmente, registrar el historial vía MCP.
+1. In-agent: el host ejecuta la tarea y usa ADAPTIX para estructurar el ciclo y, opcionalmente, registrar el historial vía MCP.
 2. Delegated: el Core invoca agentes mediante adapters instalados.
 
 ## Evaluación y convergencia
