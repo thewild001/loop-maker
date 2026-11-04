@@ -8,7 +8,7 @@
 
 > **Adaptive Execution Engine.** Un motor de ejecución adaptativa, agnóstico de proveedores, que descubre, selecciona, coordina y evalúa capacidades para alcanzar objetivos mediante ciclos controlados.
 
-> ADAPTIX es la nueva identidad de ADAPTIX. Durante la transición, los nombres técnicos, comandos, paquetes, imports, skills y endpoints existentes conservan compatibilidad.
+> ADAPTIX es la nueva identidad de Loop Maker. Durante la transición, los nombres técnicos, comandos, paquetes, imports, skills y endpoints existentes conservan compatibilidad.
 
 [![CI](https://github.com/thewild001/loop-maker/actions/workflows/ci.yml/badge.svg)](https://github.com/thewild001/loop-maker/actions)
 ![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB)
