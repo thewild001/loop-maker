@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "loop-maker-orchestrator"
 version = "0.1.0"
-description = "Agent-agnostic iteration, evaluation and recovery engine for AI agents."
+description = "ADAPTIX: provider-agnostic adaptive execution engine for capability-driven workflows."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
