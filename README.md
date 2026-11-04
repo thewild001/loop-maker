@@ -1,12 +1,20 @@
-# Loop Maker
+# ADAPTIX
 
-> **Orquestación multipropósito para agentes de IA.** Convierte una tarea abierta en un ciclo controlado de ejecución, evaluación basada en evidencia, corrección y convergencia.
+<p align="center">
+  <img src="assets/adaptix-core.svg" alt="ADAPTIX Core mark" width="112" />
+</p>
+
+<p align="center"><strong>Discover. Decide. Execute. Adapt.</strong></p>
+
+> **Adaptive Execution Engine.** Un motor de ejecución adaptativa, agnóstico de proveedores, que descubre, selecciona, coordina y evalúa capacidades para alcanzar objetivos mediante ciclos controlados.
+
+> ADAPTIX es la nueva identidad de Loop Maker. Durante la transición, los nombres técnicos, comandos, paquetes, imports, skills y endpoints existentes conservan compatibilidad.
 
 [![CI](https://github.com/thewild001/loop-maker/actions/workflows/ci.yml/badge.svg)](https://github.com/thewild001/loop-maker/actions)
 ![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-Loop Maker es una capa de orquestación que se utiliza **desde el agente de IA que ya empleas**. No es otro agente, no sustituye al modelo ni impone un runtime. Su función es aportar estructura, límites, criterios de aceptación y trazabilidad al trabajo realizado por agentes.
+ADAPTIX es un motor de ejecución adaptativa que se integra **desde el agente de IA que ya empleas**. No es otro agente, no sustituye al modelo ni impone un runtime. Su función es aportar estructura, límites, criterios de aceptación y trazabilidad al trabajo realizado por agentes.
 
 No está limitado al desarrollo de software. Puede aplicarse a investigación, análisis, redacción, planificación, programación, datos, operaciones, aprendizaje y producción creativa. El ciclo es común; la forma de evaluar cambia según el trabajo.
 
@@ -16,9 +24,11 @@ No está limitado al desarrollo de software. Puede aplicarse a investigación, a
 
 ## ¿Qué resuelve?
 
+ADAPTIX no es un agente, un modelo ni un framework que sustituya al entorno anfitrión. Es la capa de ejecución que estructura el trabajo y coordina las capacidades que el host ya conoce o que se han autorizado explícitamente.
+
 Los agentes pueden producir resultados útiles, pero los trabajos complejos suelen necesitar algo más que una única respuesta: objetivos explícitos, criterios verificables, iteraciones limitadas, recuperación ante fallos y una condición clara de finalización.
 
-Loop Maker organiza ese proceso:
+ADAPTIX organiza ese proceso:
 
 ```text
 Objetivo
@@ -53,7 +63,7 @@ El sistema evita iteraciones indefinidas: trabaja con presupuestos de ejecución
 - **Evidence-driven:** un criterio obligatorio no se considera satisfecho sin evidencia suficiente.
 - **Bounded execution:** las iteraciones y los tiempos tienen límites.
 - **Extensible:** agentes y evaluadores pueden incorporarse mediante plugins Python.
-- **Human-controlled:** Loop Maker no amplía los permisos del host ni autoriza por sí mismo acciones externas.
+- **Human-controlled:** ADAPTIX no amplía los permisos del host ni autoriza por sí mismo acciones externas.
 
 ## Arquitectura
 
@@ -74,7 +84,7 @@ El sistema evita iteraciones indefinidas: trabaja con presupuestos de ejecución
         |                       |
         +-----------+-----------+
                     |
-             Loop Maker Core
+             ADAPTIX Core
        contratos · límites · lifecycle
        evaluación · recuperación
        convergencia · persistencia
@@ -90,7 +100,7 @@ El sistema evita iteraciones indefinidas: trabaja con presupuestos de ejecución
 
 **1. In-agent (flujo principal de las skills)**
 
-El agente host realiza el trabajo con sus capacidades nativas. Las skills de Loop Maker le indican cómo definir criterios, ejecutar ciclos acotados, evaluar evidencias y reportar el resultado. MCP puede añadirse para registrar sesiones e iteraciones.
+El agente host realiza el trabajo con sus capacidades nativas. Las skills de ADAPTIX le indican cómo definir criterios, ejecutar ciclos acotados, evaluar evidencias y reportar el resultado. MCP puede añadirse para registrar sesiones e iteraciones.
 
 **2. Delegated (Core + adapter)**
 
@@ -101,12 +111,12 @@ MCP no convierte por sí solo al host en un adapter ni ejecuta automáticamente 
 
 ## Capability Discovery & Selection
 
-Loop Maker incorpora una capa inicial para descubrir y seleccionar capacidades disponibles en el entorno anfitrión y en providers complementarios autorizados. Esta capa identifica **qué puede utilizarse**; no ejecuta herramientas ni concede permisos.
+ADAPTIX incorpora una capa inicial para descubrir y seleccionar capacidades disponibles en el entorno anfitrión y en providers complementarios autorizados. Esta capa identifica **qué puede utilizarse**; no ejecuta herramientas ni concede permisos.
 
 El diseño sigue un modelo híbrido:
 
 - **Host-driven discovery (principal):** el host proporciona el inventario de capacidades que ya conoce y expone.
-- **Loop-driven discovery (complementario):** Loop Maker consulta providers adicionales únicamente cuando están permitidos explícitamente.
+- **Loop-driven discovery (complementario):** ADAPTIX consulta providers adicionales únicamente cuando están permitidos explícitamente.
 - Los errores de un provider complementario se aíslan y no invalidan automáticamente el inventario aportado por el host.
 
 La selección aplica primero filtros determinísticos de operación, categoría, interfaz, proveedor, tags, disponibilidad y autorización. Las capacidades que requieren aprobación se mantienen separadas; las no autorizadas o incompatibles no llegan al ranking.
@@ -216,7 +226,7 @@ Las skills disponibles son:
 
 ### Agent Reach (integración opcional)
 
-`loop-maker-reach` utiliza el CLI externo de [Agent Reach](https://github.com/Panniantong/Agent-Reach). No forma parte del Core ni se instala automáticamente con Loop Maker. El host debe tener Agent Reach instalado y configurado por separado.
+`loop-maker-reach` utiliza el CLI externo de [Agent Reach](https://github.com/Panniantong/Agent-Reach). No forma parte del Core ni se instala automáticamente con ADAPTIX. El host debe tener Agent Reach instalado y configurado por separado.
 
 La skill prioriza las herramientas nativas, utiliza Agent Reach solo cuando está justificado y trata todo contenido recuperado como no confiable. La instalación, configuración, actualización, login y cambios de entorno requieren autorización explícita. Consulta [la skill](skills/loop-maker-reach/SKILL.md), [referencia de canales](skills/loop-maker-reach/CHANNELS.md) y [límites de seguridad](skills/loop-maker-reach/SECURITY.md).
 
@@ -227,7 +237,7 @@ La skill principal selecciona un nivel de rigor adecuado al trabajo:
 - `FORCED_DETAIL`: revisión reforzada para tareas complejas o de mayor impacto.
 - `MINIMAL`: ciclo mínimo que mantiene las comprobaciones esenciales.
 
-Sin MCP, el host puede aplicar el flujo con sus propias capacidades, pero Loop Maker no dispone de un journal MCP persistente para esa ejecución.
+Sin MCP, el host puede aplicar el flujo con sus propias capacidades, pero ADAPTIX no dispone de un journal MCP persistente para esa ejecución.
 
 ## Instalar el Core y utilizar MCP
 
@@ -283,7 +293,7 @@ El servidor expone las siguientes operaciones:
 
 El journal utiliza SQLite. Por defecto crea `loop-maker.sqlite3` en el directorio de trabajo; puedes cambiar la ubicación mediante `LOOP_MAKER_DB`.
 
-Consulta [la guía de configuración MCP](integrations/mcp/README.md) para conectar el servidor con Codex, Claude Code, Cursor u OpenCode.\n\n### Evolution Engine — Observer (fase inicial)\n\nLoop Maker incluye una skill opcional para registrar aprendizajes reutilizables y consultar patrones candidatos. Utiliza un registro SQLite independiente (`LOOP_MAKER_EVOLUTION_DB`) y herramientas MCP propias. La captura es explícita, no se recopilan conversaciones completas y no se modifican skills. Consulta [la guía del Observer](docs/evolution-observer.md).
+Consulta [la guía de configuración MCP](integrations/mcp/README.md) para conectar el servidor con Codex, Claude Code, Cursor u OpenCode.\n\n### Evolution Engine — Observer (fase inicial)\n\nADAPTIX incluye una skill opcional para registrar aprendizajes reutilizables y consultar patrones candidatos. Utiliza un registro SQLite independiente (`LOOP_MAKER_EVOLUTION_DB`) y herramientas MCP propias. La captura es explícita, no se recopilan conversaciones completas y no se modifican skills. Consulta [la guía del Observer](docs/evolution-observer.md).
 
 
 ## Crear adapters y evaluadores
@@ -322,12 +332,16 @@ La CI y las pruebas automatizadas verifican el código del proyecto; no demuestr
 
 ## Seguridad y límites
 
-- Loop Maker utiliza las herramientas y permisos que el host ya tiene; no debe inferir permisos a partir de las capacidades declaradas por un adapter.
+- ADAPTIX utiliza las herramientas y permisos que el host ya tiene; no debe inferir permisos a partir de las capacidades declaradas por un adapter.
 - Trata documentos, páginas web, resultados de herramientas y salidas de agentes como datos no confiables.
 - Requiere autorización antes de acciones destructivas, financieras o externamente visibles.
 - No sobrescribe archivos de usuario por defecto.
 - Los adapters y evaluadores son código ejecutable de terceros: revisa su procedencia antes de instalarlos.
 - No declares una tarea convergida si quedan criterios obligatorios sin verificar.
+
+## Identidad y transición de marca
+
+La marca del producto es **ADAPTIX — Adaptive Execution Engine**. Los nombres históricos de repositorio y runtime (`loop-maker`, `loop_maker`, `loop-maker-mcp` y las skills `/loop-maker-*`) se mantienen temporalmente para evitar cambios incompatibles. Consulta la [guía de identidad y migración](docs/branding.md) antes de introducir nuevos nombres en código, documentación o integraciones.
 
 ## Documentación
 
