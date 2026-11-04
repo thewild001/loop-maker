@@ -34,6 +34,7 @@ class RejectionCode(str, Enum):
     APPROVAL_REQUIRED = "approval_required"
     AUTHORIZATION_UNKNOWN = "authorization_unknown"
     ASSESSMENT_MISSING = "assessment_missing"
+    ASSESSMENT_CONTEXT_MISMATCH = "assessment_context_mismatch"
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,6 +47,7 @@ class SelectionRequest:
 
     operation_id: str
     objective: str | None = None
+    context_ref: str | None = None
     categories: tuple[CapabilityCategory, ...] = ()
     interface_kinds: tuple[InterfaceKind, ...] = ()
     required_tags: tuple[str, ...] = ()
@@ -62,6 +64,10 @@ class SelectionRequest:
             not isinstance(self.objective, str) or not self.objective.strip()
         ):
             raise ValueError("objective must be a non-empty string when provided")
+        if self.context_ref is not None and (
+            not isinstance(self.context_ref, str) or not self.context_ref.strip()
+        ):
+            raise ValueError("context_ref must be a non-empty string when provided")
         if self.max_results is not None and self.max_results < 1:
             raise ValueError("max_results must be greater than zero")
         for provider_id in (
@@ -109,7 +115,6 @@ class DeterministicCapabilitySelector:
         inventory: CapabilityInventory,
         request: SelectionRequest,
     ) -> SelectionResult:
-        assessments = self._assessment_index(inventory.assessments)
         selected: list[tuple[CapabilityDescriptor, CapabilityAssessment]] = []
         approval: list[tuple[CapabilityDescriptor, CapabilityAssessment]] = []
         rejected: list[RejectedCapability] = []
@@ -120,16 +125,21 @@ class DeterministicCapabilitySelector:
                 rejected.append(RejectedCapability(capability.id, reason[0], reason[1]))
                 continue
 
-            # An operation-specific assessment takes precedence over a capability-wide one.
-            assessment = assessments.get((capability.id, request.operation_id)) or assessments.get(
-                (capability.id, None)
+            assessment, context_mismatch = self._assessment_for(
+                inventory.assessments, capability.id, request
             )
             if assessment is None:
-                rejected.append(RejectedCapability(
-                    capability.id,
-                    RejectionCode.ASSESSMENT_MISSING,
-                    "No assessment exists for this capability operation.",
-                ))
+                code = (
+                    RejectionCode.ASSESSMENT_CONTEXT_MISMATCH
+                    if context_mismatch
+                    else RejectionCode.ASSESSMENT_MISSING
+                )
+                explanation = (
+                    "Assessments exist, but none match the requested context."
+                    if context_mismatch
+                    else "No assessment exists for this capability operation."
+                )
+                rejected.append(RejectedCapability(capability.id, code, explanation))
                 continue
 
             decision = self._assessment_rejection(assessment, request)
@@ -173,25 +183,43 @@ class DeterministicCapabilitySelector:
             rejected=tuple(sorted(rejected, key=lambda item: item.capability_id)),
         )
 
-    @staticmethod
-    def _assessment_index(
+    @classmethod
+    def _assessment_for(
+        cls,
         assessments: tuple[CapabilityAssessment, ...],
-    ) -> dict[tuple[str, str | None], CapabilityAssessment]:
-        """Keep the newest assessment per capability and operation scope."""
-        index: dict[tuple[str, str | None], CapabilityAssessment] = {}
-        for assessment in assessments:
-            key = (assessment.capability_id, assessment.operation_id)
-            current = index.get(key)
-            if current is None or assessment.assessed_at > current.assessed_at:
-                index[key] = assessment
-            elif assessment.assessed_at == current.assessed_at:
-                # Resolve conflicting same-time observations conservatively and
-                # independently of provider iteration order.
-                if DeterministicCapabilitySelector._assessment_safety_key(
-                    assessment
-                ) > DeterministicCapabilitySelector._assessment_safety_key(current):
-                    index[key] = assessment
-        return index
+        capability_id: str,
+        request: SelectionRequest,
+    ) -> tuple[CapabilityAssessment | None, bool]:
+        """Choose the newest assessment in the requested context.
+
+        Context-free assessments are reusable defaults. Context-bound
+        assessments are considered only for an exact context match; they are
+        never borrowed by another session. Operation-specific assessments
+        take precedence over capability-wide assessments within that scope.
+        """
+        candidates = [
+            item for item in assessments if item.capability_id == capability_id
+        ]
+        if not candidates:
+            return None, False
+
+        scoped = [
+            item for item in candidates
+            if item.context_ref is None or item.context_ref == request.context_ref
+        ]
+        if not scoped:
+            return None, True
+
+        scoped.sort(
+            key=lambda item: (
+                item.context_ref is not None,
+                item.operation_id == request.operation_id,
+                item.assessed_at,
+                cls._assessment_safety_key(item),
+            ),
+            reverse=True,
+        )
+        return scoped[0], False
 
     @staticmethod
     def _assessment_safety_key(
