@@ -28,6 +28,7 @@ def make_capability(
     tags=("web",),
     category=CapabilityCategory.TOOL,
     interface=InterfaceKind.NATIVE,
+    operations=(CapabilityOperation("search", "Search"),),
 ):
     return CapabilityDescriptor(
         id=capability_id,
@@ -36,7 +37,7 @@ def make_capability(
         category=category,
         source=CapabilitySource(provider_id, "host", capability_id),
         interface=CapabilityInterface(interface, capability_id),
-        operations=(CapabilityOperation("search", "Search"),),
+        operations=operations,
         constraints=CapabilityConstraints(tags=tags),
     )
 
@@ -334,7 +335,13 @@ def test_conflicting_same_timestamp_assessments_resolve_conservatively():
 
 
 def test_assessment_for_unrelated_operation_cannot_authorize_requested_operation():
-    capability = make_capability("cross-operation")
+    capability = make_capability(
+        "cross-operation",
+        operations=(
+            CapabilityOperation("search", "Search"),
+            CapabilityOperation("delete", "Delete"),
+        ),
+    )
     delete_assessment = CapabilityAssessment(
         capability_id="cross-operation",
         operation_id="delete",
@@ -353,7 +360,13 @@ def test_assessment_for_unrelated_operation_cannot_authorize_requested_operation
 
 
 def test_generic_assessment_is_used_when_only_other_operation_assessment_also_exists():
-    capability = make_capability("generic-fallback")
+    capability = make_capability(
+        "generic-fallback",
+        operations=(
+            CapabilityOperation("search", "Search"),
+            CapabilityOperation("delete", "Delete"),
+        ),
+    )
     generic = CapabilityAssessment(
         capability_id="generic-fallback",
         availability=Availability.AVAILABLE,
