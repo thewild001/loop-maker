@@ -11,8 +11,8 @@ from .engine import LoopEngine
 from .registry import discover_adapters, discover_evaluator
 from .storage import SessionStore
 
-def main() -> None:
-    parser = argparse.ArgumentParser(prog="loop-maker", description="Agent-agnostic iteration orchestrator")
+def main(*, prog: str = "loop-maker") -> None:
+    parser = argparse.ArgumentParser(prog=prog, description="ADAPTIX adaptive execution engine")
     sub = parser.add_subparsers(dest="command", required=True)
     run = sub.add_parser("run", help="Run an objective through an installed agent adapter")
     run.add_argument("objective")
@@ -33,6 +33,11 @@ def main() -> None:
         "converged": result.converged, "iterations": result.iterations,
         "output": result.output, "errors": result.errors, "metrics": result.metrics,
     }, ensure_ascii=False, indent=2))
+
+def adaptix_main() -> None:
+    """ADAPTIX-branded CLI entry point; preserves the legacy command."""
+    main(prog="adaptix")
+
 
 if __name__ == "__main__":
     main()
