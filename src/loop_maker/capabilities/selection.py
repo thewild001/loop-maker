@@ -6,7 +6,7 @@ revalidation.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 
 from .models import (
@@ -15,7 +15,6 @@ from .models import (
     CapabilityAssessment,
     CapabilityCategory,
     CapabilityDescriptor,
-    CapabilityInterface,
     CapabilityInventory,
     InterfaceKind,
 )
@@ -127,13 +126,6 @@ class DeterministicCapabilitySelector:
             decision = self._assessment_rejection(assessment, request)
             if decision is not None:
                 code, explanation = decision
-                candidate = SelectedCapability(
-                    capability=capability,
-                    operation_id=request.operation_id,
-                    assessment=assessment,
-                    rank=0,
-                    reasons=("Static constraints satisfied.",),
-                )
                 if code is RejectionCode.APPROVAL_REQUIRED:
                     approval.append((capability, assessment))
                 else:
