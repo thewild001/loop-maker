@@ -68,16 +68,30 @@ class SelectionRequest:
             not isinstance(self.context_ref, str) or not self.context_ref.strip()
         ):
             raise ValueError("context_ref must be a non-empty string when provided")
-        if self.max_results is not None and self.max_results < 1:
-            raise ValueError("max_results must be greater than zero")
-        for provider_id in (
-            *self.allowed_providers, *self.excluded_providers, *self.preferred_providers
+        if type(self.allow_degraded) is not bool:
+            raise TypeError("allow_degraded must be a bool")
+        if self.max_results is not None and (
+            type(self.max_results) is not int or self.max_results < 1
         ):
-            if not isinstance(provider_id, str) or not provider_id.strip():
-                raise ValueError("provider IDs must be non-empty strings")
-        for tag in self.required_tags:
-            if not isinstance(tag, str) or not tag.strip():
-                raise ValueError("required tags must be non-empty strings")
+            raise ValueError("max_results must be a positive integer")
+        if not isinstance(self.categories, tuple) or not all(
+            isinstance(item, CapabilityCategory) for item in self.categories
+        ):
+            raise TypeError("categories must be a tuple of CapabilityCategory values")
+        if not isinstance(self.interface_kinds, tuple) or not all(
+            isinstance(item, InterfaceKind) for item in self.interface_kinds
+        ):
+            raise TypeError("interface_kinds must be a tuple of InterfaceKind values")
+        for field_name, values in (
+            ("required_tags", self.required_tags),
+            ("allowed_providers", self.allowed_providers),
+            ("excluded_providers", self.excluded_providers),
+            ("preferred_providers", self.preferred_providers),
+        ):
+            if not isinstance(values, tuple):
+                raise TypeError(f"{field_name} must be a tuple of non-empty strings")
+            if not all(isinstance(value, str) and value.strip() for value in values):
+                raise ValueError(f"{field_name} must contain non-empty strings")
 
 
 @dataclass(frozen=True, slots=True)
@@ -198,22 +212,34 @@ class DeterministicCapabilitySelector:
         take precedence over capability-wide assessments within that scope.
         """
         candidates = [
-            item for item in assessments if item.capability_id == capability_id
+            item for item in assessments
+            if item.capability_id == capability_id
         ]
         if not candidates:
             return None, False
 
-        scoped = [
+        # An assessment for another operation is never evidence for this one.
+        applicable = [
             item for item in candidates
+            if item.operation_id is None or item.operation_id == request.operation_id
+        ]
+        if not applicable:
+            return None, False
+
+        scoped = [
+            item for item in applicable
             if item.context_ref is None or item.context_ref == request.context_ref
         ]
         if not scoped:
             return None, True
 
+        # Specificity is ordered deliberately: operation-specific first, then
+        # context-specific. Within an equal scope, newest wins; equal timestamps
+        # resolve conservatively using the safety key.
         scoped.sort(
             key=lambda item: (
-                item.context_ref is not None,
                 item.operation_id == request.operation_id,
+                item.context_ref is not None,
                 item.assessed_at,
                 cls._assessment_safety_key(item),
             ),
