@@ -259,7 +259,7 @@ El servidor expone las siguientes operaciones:
 
 El journal utiliza SQLite. Por defecto crea `loop-maker.sqlite3` en el directorio de trabajo; puedes cambiar la ubicación mediante `LOOP_MAKER_DB`.
 
-Consulta [la guía de configuración MCP](integrations/mcp/README.md) para conectar el servidor con Codex, Claude Code, Cursor u OpenCode.
+Consulta [la guía de configuración MCP](integrations/mcp/README.md) para conectar el servidor con Codex, Claude Code, Cursor u OpenCode.\n\n### Evolution Engine — Observer (fase inicial)\n\nLoop Maker incluye una skill opcional para registrar aprendizajes reutilizables y consultar patrones candidatos. Utiliza un registro SQLite independiente (`LOOP_MAKER_EVOLUTION_DB`) y herramientas MCP propias. La captura es explícita, no se recopilan conversaciones completas y no se modifican skills. Consulta [la guía del Observer](docs/evolution-observer.md).
 
 ## Crear adapters y evaluadores
 
