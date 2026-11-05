@@ -48,3 +48,11 @@ Los paquetes de adaptadores y evaluadores ejecutan código dentro del proceso y 
 - Contratos en src/loop_maker/contracts.py.
 - Skills canónicas en skills/.
 - Herramientas MCP en src/loop_maker/mcp_server.py.
+
+## Capability selection and host execution boundary
+
+Capability discovery, deterministic selection and optional ranking identify suitable candidates; they do not invoke them. For host-native capabilities, the host remains responsible for resolving interface references, revalidating permissions and availability immediately before invocation, and executing through its existing runtime.
+
+The selection result is a decision record, not a callable or execution grant. Delegated AgentAdapters remain a separate, trusted extension path. See [Capability Selection and Host Execution Boundary](capability-host-execution-contract-v1.md) for the normative lifecycle, failure semantics and security requirements.
+
+The host-mediated handoff, binding resolution and decision-correlated outcome journal are design targets; they are not yet implemented as an end-to-end runtime flow.
