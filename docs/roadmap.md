@@ -5,7 +5,7 @@ El roadmap sigue entregas verificables. Los adaptadores nativos se desarrollan d
 | Entrega | Objetivo | Estado |
 |---|---|---|
 | 0.1 Foundation | Core básico, contrato, SQLite, skills, MCP y bootstrap multi-host | En desarrollo |
-| 0.2 Contract hardening | Evaluadores independientes, límites, cancelación, pruebas de contrato | Pendiente |
+| 0.2 Contract hardening + host handoff | Evaluadores independientes, límites, cancelación, pruebas de contrato y frontera de ejecución controlada por el host | Contrato de host documentado; runtime pendiente |
 | 0.3 Host integrations | Recetas MCP validadas y adapters nativos prioritarios | Pendiente |
 | 0.4 Quality & Recovery | Clasificación A-I, circuit breakers, checkpoints y regresiones | Pendiente |
 | 0.5 Observability | Métricas, trazas, exportación y retención configurable | Pendiente |
@@ -28,6 +28,10 @@ El roadmap sigue entregas verificables. Los adaptadores nativos se desarrollan d
 - Un timeout o error del evaluador no produce convergencia falsa.
 - Los límites de iteraciones y tiempo se aplican en el Core.
 - Los errores A-I tienen política y tests.
+- A host can submit its own bounded inventory and receive a selection decision without registering native tools inside ADAPTIX.
+- The host resolves and invokes selected capabilities through its own runtime.
+- Invocation-time revalidation prevents execution after permission revocation or capability disappearance.
+- Selection decisions, invocation outcomes and task-level evaluation remain distinct and correlatable.
 
 ## Gate 0.3
 
