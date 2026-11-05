@@ -16,6 +16,7 @@ ADAPTIX is an open-source, provider-agnostic engine for capability-driven, contr
 | Connect an existing host through MCP | [MCP integration guide](../integrations/mcp/README.md) |
 | Understand capability discovery and deterministic selection | [Capability discovery and selection](capability-discovery-selection-v1.md) |
 | Understand optional intelligent ranking | [Intelligent capability ranking](intelligent-capability-ranking-v1.md) |
+| Understand the host-owned invocation boundary | [Capability host execution contract](capability-host-execution-contract-v1.md) |
 | Review the product identity and naming transition | [Brand identity and migration](branding.md) |
 | See planned work and release gates | [Roadmap](roadmap.md) |
 
